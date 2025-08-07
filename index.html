@@ -630,6 +630,29 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        
+        // 启用匿名认证以解决权限问题
+        auth.signInAnonymously()
+            .then(() => {
+                console.log('匿名认证成功');
+            })
+            .catch((error) => {
+                console.error('匿名认证失败:', error);
+            });
+
+        // 确保写入前已完成认证
+        async function ensureAuth() {
+            if (auth.currentUser) return auth.currentUser;
+            return await new Promise(async (resolve) => {
+                const unsubscribe = auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        unsubscribe();
+                        resolve(user);
+                    }
+                });
+                try { await auth.signInAnonymously(); } catch (e) {}
+            });
+        }
 
         // Solana 连接
         const connection = new solanaWeb3.Connection('https://api.devnet.solana.com');
@@ -868,7 +891,10 @@
                 const response = await walletProvider.connect();
                 wallet = walletProvider;
                 
-                // 使用钱包地址作为用户ID进行匿名认证
+                // 确保匿名认证已就绪
+                await ensureAuth();
+
+                // 使用钱包地址作为用户ID
                 const walletAddress = response.publicKey.toString();
                 
                 // 创建或获取用户信息（不依赖Firebase Auth）
@@ -934,18 +960,9 @@
                         ...round.data()
                     };
                 } else {
-                    // 创建新轮次
-                    const roundRef = await db.collection('rounds').add({
-                        status: 'active',
-                        level: 1,
-                        participants: [],
-                        totalAmount: 0,
-                        createdAt: new Date(),
-                        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-                    });
-                    
+                    // 无权限创建轮次时，仅本地占位，不进行写入
                     currentRound = {
-                        id: roundRef.id,
+                        id: null,
                         status: 'active',
                         level: 1,
                         participants: [],
@@ -1028,7 +1045,7 @@
                 const transaction = new solanaWeb3.Transaction();
                 
                 // 这里应该发送到你的项目钱包地址
-                                        const recipientAddress = new solanaWeb3.PublicKey('6N9GiSmCPDQBoLmGGdEF5RyTAu3osQFe4GTFJwFUEhKo');
+                const recipientAddress = new solanaWeb3.PublicKey('6N9GiSmCPDQBoLmGGdEF5RyTAu3osQFe4GTFJwFUEhKo');
                 
                 transaction.add(
                     solanaWeb3.SystemProgram.transfer({
@@ -1038,12 +1055,18 @@
                     })
                 );
 
-                // 发送交易
-                const signature = await wallet.signAndSendTransaction(transaction);
-                await connection.confirmTransaction(signature.signature);
+                // 获取最新的 blockhash 并设置 feePayer
+                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+                transaction.recentBlockhash = blockhash;
+                transaction.feePayer = wallet.publicKey;
+
+                // 签名并发送交易（兼容不同钱包）
+                const signedTx = await wallet.signTransaction(transaction);
+                const txid = await connection.sendRawTransaction(signedTx.serialize());
+                await connection.confirmTransaction({ signature: txid, blockhash, lastValidBlockHeight }, 'confirmed');
 
                 // 记录购票
-                await recordTicketPurchase(amount, signature.signature);
+                await recordTicketPurchase(amount, txid);
 
                 showNotification(`成功购买 ${amount}U 奖券！`, 'success');
                 await loadUserTickets();
@@ -1060,6 +1083,8 @@
         // 记录购票
         async function recordTicketPurchase(amount, signature) {
             try {
+                // 确保已认证
+                await ensureAuth();
                 // 记录奖券
                 await db.collection('tickets').add({
                     userId: currentUser.uid,
@@ -1072,27 +1097,29 @@
 
                 // 更新轮次参与者
                 if (currentRound) {
-                    const roundRef = db.collection('rounds').doc(currentRound.id);
-                    const roundDoc = await roundRef.get();
-                    
-                    if (roundDoc.exists) {
-                        const roundData = roundDoc.data();
-                        const newParticipants = [...(roundData.participants || []), {
-                            userId: currentUser.uid,
-                            walletAddress: wallet.publicKey.toString(),
-                            amount: amount,
-                            timestamp: new Date(),
-                        }];
-
-                        await roundRef.update({
-                            participants: newParticipants,
-                            totalAmount: (roundData.totalAmount || 0) + amount,
-                        });
-
-                        // 检查是否满员
-                        if (newParticipants.length >= 10) {
-                            await triggerLottery(roundRef.id);
+                    try {
+                        if (currentRound.id) {
+                            const roundRef = db.collection('rounds').doc(currentRound.id);
+                            const roundDoc = await roundRef.get();
+                            if (roundDoc.exists) {
+                                const roundData = roundDoc.data();
+                                const newParticipants = [...(roundData.participants || []), {
+                                    userId: currentUser.uid,
+                                    walletAddress: wallet.publicKey.toString(),
+                                    amount: amount,
+                                    timestamp: new Date(),
+                                }];
+                                await roundRef.update({
+                                    participants: newParticipants,
+                                    totalAmount: (roundData.totalAmount || 0) + amount,
+                                });
+                                if (newParticipants.length >= 10) {
+                                    await triggerLottery(roundRef.id);
+                                }
+                            }
                         }
+                    } catch (e) {
+                        console.warn('无权限更新轮次，将等待后台处理:', e);
                     }
                 }
             } catch (error) {
@@ -1102,20 +1129,9 @@
 
         // 触发开奖
         async function triggerLottery(roundId) {
-            try {
-                showNotification('轮次已满员，即将开奖！', 'success');
-                
-                // 更新轮次状态
-                await db.collection('rounds').doc(roundId).update({
-                    status: 'completed',
-                    completedAt: new Date(),
-                });
-
-                // 重新加载轮次
-                await loadCurrentRound();
-            } catch (error) {
-                console.error('开奖失败:', error);
-            }
+            // 前端不再直接修改轮次状态，交由云函数/后台处理
+            showNotification('轮次已满员，等待后台自动开奖', 'info');
+            await loadCurrentRound();
         }
 
         // 加载奖池信息
