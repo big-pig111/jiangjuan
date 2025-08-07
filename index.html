@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抽奖应用 - 10人开奖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#F59E0B',
+                        memeYellow: '#FFDD00',
+                        memePink: '#FF2E93',
+                        memeBlue: '#00A3FF',
+                        memeGreen: '#00E08E',
+                        memePurple: '#9D4EDD',
+                        memeBlack: '#121212',
+                    },
+                    fontFamily: {
+                        meme: ['"Comic Sans MS"', '"Comic Neue"', 'cursive'],
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'spin': 'spin 1s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        shake: {
+                            '10%, 90%': { transform: 'translateX(-1px)' },
+                            '20%, 80%': { transform: 'translateX(2px)' },
+                            '30%, 50%, 70%': { transform: 'translateX(-4px)' },
+                            '40%, 60%': { transform: 'translateX(4px)' },
+                        }
+                    }
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.2);
+            }
+            .text-shadow-lg {
+                text-shadow: 5px 5px 0px rgba(0, 0, 0, 0.2);
+            }
+            .rotate-random {
+                transform: rotate(var(--rotation, -3deg));
+            }
+            .border-meme {
+                border-width: 4px;
+                border-style: solid;
+                border-color: black;
+            }
+            .clip-path-slant {
+                clip-path: polygon(0 0, 100% 5%, 100% 100%, 0 95%);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-meme overflow-x-hidden">
+    <!-- 导航栏 -->
+    <nav class="sticky top-0 z-50 bg-memeYellow border-b-4 border-black shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="text-4xl animate-pulse-fast">🎯</div>
+                <h1 class="text-2xl md:text-3xl font-bold text-shadow">抽奖应用 <span class="text-memePink">LOTTERY</span></h1>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="#" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">首页</a>
+                <a href="#how-it-works" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">玩法说明</a>
+                <a href="#prizes" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">中奖记录</a>
+                <a href="#leaderboard" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">排行榜</a>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button id="wallet-connect" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-md">
+                    <i class="fa fa-wallet mr-2"></i> 连接钱包
+                </button>
+                <div id="wallet-info" class="hidden">
+                    <span id="wallet-address" class="text-sm text-gray-600 mr-2"></span>
+                    <button id="disconnect-wallet" class="text-red-500 hover:text-red-700">
+                        <i class="fa fa-sign-out"></i>
+                    </button>
+                </div>
+                <button class="md:hidden text-2xl">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <header class="relative bg-gradient-to-br from-memePurple via-purple-700 to-memeBlue clip-path-slant py-16 md:py-24 overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full opacity-10">
+            <div class="absolute top-10 left-10 text-9xl">🚀</div>
+            <div class="absolute top-40 right-20 text-8xl">💰</div>
+            <div class="absolute bottom-20 left-1/3 text-10xl">🎉</div>
+            <div class="absolute bottom-40 right-1/4 text-7xl">🚨</div>
+        </div>
+        
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="max-w-3xl mx-auto text-center">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white text-shadow-lg animate-float">
+                    10人开奖 <span class="text-memeYellow">赢大奖</span>!
+                </h1>
+                <p class="text-xl md:text-2xl text-white mb-8 text-shadow">
+                    满10人自动开奖！80%中奖 + 10%回购 + 5%返佣 + 4%总奖池 + 1%开发者！
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button id="buy-tickets-btn" class="bg-memeYellow hover:bg-yellow-400 text-black font-bold py-3 px-8 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-xl text-lg">
+                        <i class="fa fa-ticket mr-2"></i> 购买奖券
+                    </button>
+                    <button class="bg-white hover:bg-gray-200 text-memePurple font-bold py-3 px-8 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-xl text-lg">
+                        <i class="fa fa-info-circle mr-2"></i> 玩法说明
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="absolute -bottom-6 left-0 right-0 flex justify-center">
+            <div class="bg-white px-6 py-3 rounded-full border-4 border-black shadow-lg flex items-center space-x-2 animate-bounce">
+                <span class="font-bold">Scroll Down</span>
+                <i class="fa fa-chevron-down"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- 当前奖池状态 -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">当前 <span class="text-memePink">轮次</span></h2>
+                <p class="text-xl text-gray-600">还差 <span id="remaining-count" class="font-bold text-memeBlue">10</span> 人开奖！</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <!-- 进度条 -->
+                <div class="bg-gray-200 rounded-full h-12 mb-8 border-4 border-black overflow-hidden relative">
+                    <div id="progress-bar" class="bg-gradient-to-r from-memeGreen to-memeBlue h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    <div id="progress-label" class="absolute left-[50%] -translate-x-1/2 -translate-y-1/2">
+                        <div class="bg-memeYellow text-black font-bold px-4 py-1 rounded-full border-2 border-black transform rotate-[-5deg]">
+                            <span id="participant-count">0</span>/10 人
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 详细统计 -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
+                        <div class="text-2xl font-bold text-memeBlue" id="total-amount">0</div>
+                        <div class="text-sm text-gray-600">总金额 (U)</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
+                        <div class="text-2xl font-bold text-memeGreen" id="avg-amount">0</div>
+                        <div class="text-sm text-gray-600">平均金额 (U)</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
+                        <div class="text-2xl font-bold text-memePurple" id="max-amount">0</div>
+                        <div class="text-sm text-gray-600">最高金额 (U)</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
+                        <div class="text-2xl font-bold text-memePink" id="min-amount">0</div>
+                        <div class="text-sm text-gray-600">最低金额 (U)</div>
+                    </div>
+                </div>
+                
+                <!-- 奖池卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-gradient-to-br from-yellow-100 to-memeYellow p-6 rounded-2xl border-meme shadow-xl transform rotate-random hover:scale-105 transition-all">
+                        <h3 class="text-2xl font-bold mb-4 text-black">当前奖池</h3>
+                        <div class="flex items-end gap-2">
+                            <span id="current-pool" class="text-5xl font-bold text-black">0</span>
+                            <span class="text-2xl font-bold text-gray-700 mb-1">U</span>
+                        </div>
+                        <div class="mt-4 text-lg">
+                            <p><i class="fa fa-user mr-2"></i> <span id="current-participants">0</span> 参与者</p>
+                            <p><i class="fa fa-clock-o mr-2"></i> <span id="pool-status">等待中...</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-blue-100 to-memeBlue p-6 rounded-2xl border-meme shadow-xl transform rotate-random hover:scale-105 transition-all" style="--rotation: 2deg">
+                        <h3 class="text-2xl font-bold mb-4 text-white">总奖池</h3>
+                        <div class="flex items-end gap-2">
+                            <span id="grand-prize" class="text-5xl font-bold text-white">0</span>
+                            <span class="text-2xl font-bold text-blue-100 mb-1">U</span>
+                        </div>
+                        <div class="mt-4 text-lg text-white">
+                            <p><i class="fa fa-ticket mr-2"></i> <span id="total-tickets">0</span> 总奖券</p>
+                            <p><i class="fa fa-calendar mr-2"></i> 下次开奖: <span id="next-draw">周日</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 参与者列表 -->
+                <div class="mt-8 bg-white rounded-2xl border-4 border-black p-6 shadow-xl">
+                    <h3 class="text-2xl font-bold mb-4 text-center">当前参与者</h3>
+                    <div id="participants-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        <!-- 参与者卡片将在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 参与选项 -->
+    <section class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">选择 <span class="text-memeGreen">档位</span></h2>
+                <p class="text-xl text-gray-600">选择投资档位（每10U获得1张奖券）</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 max-w-5xl mx-auto">
+                <!-- 选项卡片 -->
+                <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
+                    <div class="text-4xl mb-4">🥉</div>
+                    <h3 class="text-2xl font-bold mb-2">1U</h3>
+                    <p class="text-gray-600 mb-4">0.1 奖券</p>
+                    <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="1">
+                        立即购买
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
+                    <div class="text-4xl mb-4">🥈</div>
+                    <h3 class="text-2xl font-bold mb-2">2U</h3>
+                    <p class="text-gray-600 mb-4">0.2 奖券</p>
+                    <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="2">
+                        立即购买
+                    </button>
+                </div>
+                
+                <div class="bg-memeYellow rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake relative">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-memePink text-white font-bold px-3 py-1 rounded-full border-2 border-black transform rotate-[-10deg]">
+                        热门
+                    </div>
+                    <div class="text-4xl mb-4">🏆</div>
+                    <h3 class="text-2xl font-bold mb-2">10U</h3>
+                    <p class="text-gray-800 mb-4">1 奖券</p>
+                    <button class="buy-ticket-btn w-full bg-black text-white hover:bg-gray-800 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="10">
+                        立即购买
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
+                    <div class="text-4xl mb-4">💎</div>
+                    <h3 class="text-2xl font-bold mb-2">50U</h3>
+                    <p class="text-gray-600 mb-4">5 奖券</p>
+                    <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="50">
+                        立即购买
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
+                    <div class="text-4xl mb-4">🚀</div>
+                    <h3 class="text-2xl font-bold mb-2">100U</h3>
+                    <p class="text-gray-600 mb-4">10 奖券</p>
+                    <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="100">
+                        立即购买
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 如何工作 -->
+    <section id="how-it-works" class="py-16 bg-white relative overflow-hidden">
+        <div class="absolute -right-20 -top-20 text-9xl opacity-10">🤔</div>
+        <div class="absolute -left-10 bottom-10 text-8xl opacity-10">📝</div>
+        
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">HOW IT <span class="text-memeBlue">WORKS</span></h2>
+                <p class="text-xl text-gray-600">It's simple, even your grandma could do it (no offense grandma)</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="bg-gray-50 p-6 rounded-2xl border-meme shadow-lg">
+                    <div class="w-16 h-16 bg-memePink rounded-full flex items-center justify-center text-white text-2xl mb-6 mx-auto border-4 border-black">
+                        1
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-center">CONNECT WALLET</h3>
+                    <p class="text-center">Link your Solana wallet (Phantom, Solflare, whatever floats your boat)</p>
+                </div>
+                
+                <div class="bg-gray-50 p-6 rounded-2xl border-meme shadow-lg">
+                    <div class="w-16 h-16 bg-memeBlue rounded-full flex items-center justify-center text-white text-2xl mb-6 mx-auto border-4 border-black">
+                        2
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-center">BUY TICKETS</h3>
+                    <p class="text-center">Choose your amount and get tickets. More tickets = better chance (duh)</p>
+                </div>
+                
+                <div class="bg-gray-50 p-6 rounded-2xl border-meme shadow-lg">
+                    <div class="w-16 h-16 bg-memeGreen rounded-full flex items-center justify-center text-white text-2xl mb-6 mx-auto border-4 border-black">
+                        3
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-center">WIN (OR NOT)</h3>
+                    <p class="text-center">We draw when there's 10 people. 80% to winner, 10% buyback, 5% referrals!</p>
+                </div>
+            </div>
+            
+            <!-- 分配说明 -->
+            <div class="mt-16 max-w-3xl mx-auto bg-gray-100 p-8 rounded-2xl border-meme shadow-lg">
+                <h3 class="text-2xl font-bold mb-6 text-center">PRIZE DISTRIBUTION (10u example)</h3>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <div class="w-24 font-bold">80u</div>
+                        <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
+                            <div class="bg-memeGreen h-full rounded-full" style="width: 80%"></div>
+                        </div>
+                        <div class="w-32 ml-4">Winner</div>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <div class="w-24 font-bold">10u</div>
+                        <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
+                            <div class="bg-memePurple h-full rounded-full" style="width: 10%"></div>
+                        </div>
+                        <div class="w-32 ml-4">Buyback</div>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <div class="w-24 font-bold">5u</div>
+                        <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
+                            <div class="bg-memeBlue h-full rounded-full" style="width: 5%"></div>
+                        </div>
+                        <div class="w-32 ml-4">Referrals</div>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <div class="w-24 font-bold">4u</div>
+                        <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
+                            <div class="bg-memeYellow h-full rounded-full" style="width: 4%"></div>
+                        </div>
+                        <div class="w-32 ml-4">Grand Prize</div>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <div class="w-24 font-bold">1u</div>
+                        <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
+                            <div class="bg-memePink h-full rounded-full" style="width: 1%"></div>
+                        </div>
+                        <div class="w-32 ml-4">Developers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 最近赢家 -->
+    <section id="prizes" class="py-16 bg-gradient-to-br from-gray-900 to-memeBlack text-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-2 text-shadow">RECENT <span class="text-memeGreen">WINNERS</span></h2>
+                <p class="text-xl text-gray-300">These lucky folks cashed out big time!</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <!-- 赢家卡片 -->
+                <div class="bg-gray-800 rounded-xl border-2 border-white p-6 transform hover:scale-105 transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold">@CryptoBro69</h3>
+                            <p class="text-gray-400">30 minutes ago</p>
+                        </div>
+                        <div class="text-3xl">🥳</div>
+                    </div>
+                    <div class="text-3xl font-bold mb-2">80 SOL</div>
+                    <p class="text-gray-300 text-sm">
+                        <i class="fa fa-hashtag mr-1"></i> Pool #456 • 
+                        <i class="fa fa-ticket mr-1"></i> 1 Ticket
+                    </p>
+                </div>
+                
+                <div class="bg-gray-800 rounded-xl border-2 border-white p-6 transform hover:scale-105 transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold">@MemeQueen</h3>
+                            <p class="text-gray-400">2 hours ago</p>
+                        </div>
+                        <div class="text-3xl">🤯</div>
+                    </div>
+                    <div class="text-3xl font-bold mb-2">400 SOL</div>
+                    <p class="text-gray-300 text-sm">
+                        <i class="fa fa-hashtag mr-1"></i> Pool #455 • 
+                        <i class="fa fa-ticket mr-1"></i> 5 Tickets
+                    </p>
+                </div>
+                
+                <div class="bg-gray-800 rounded-xl border-2 border-white p-6 transform hover:scale-105 transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold">@HODLer4Life</h3>
+                            <p class="text-gray-400">5 hours ago</p>
+                        </div>
+                        <div class="text-3xl">🚀</div>
+                    </div>
+                    <div class="text-3xl font-bold mb-2">800 SOL</div>
+                    <p class="text-gray-300 text-sm">
+                        <i class="fa fa-hashtag mr-1"></i> Pool #454 • 
+                        <i class="fa fa-ticket mr-1"></i> 10 Tickets
+                    </p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-10">
+                <button class="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-6 rounded-lg border-2 border-white transform hover:scale-105 transition-all">
+                    View All Winners
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 推荐计划 -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto bg-gradient-to-r from-memePink to-purple-600 rounded-3xl p-8 md:p-12 border-meme shadow-2xl relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 text-9xl opacity-20">💸</div>
+                
+                <div class="relative z-10">
+                    <h2 class="text-4xl font-bold mb-6 text-white text-shadow text-center">REFER & <span class="text-memeYellow">EARN</span></h2>
+                    <p class="text-xl text-white mb-8 text-center">Get 0.5u for each person you refer (when they play)</p>
+                    
+                    <div class="bg-white p-6 rounded-xl border-2 border-black mb-6">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <input type="text" value="https://moonshotlottery.com/?ref=YOUR_WALLET" class="flex-1 font-meme p-3 border-2 border-gray-300 rounded-lg" readonly>
+                            <button class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg border-2 border-black transform hover:scale-105 transition-all whitespace-nowrap">
+                                Copy Link
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white/90 p-5 rounded-xl border-2 border-black">
+                            <h3 class="text-xl font-bold mb-2">Your Referrals</h3>
+                            <p class="text-3xl font-bold">12 People</p>
+                        </div>
+                        
+                        <div class="bg-white/90 p-5 rounded-xl border-2 border-black">
+                            <h3 class="text-xl font-bold mb-2">Earnings</h3>
+                            <p class="text-3xl font-bold">6.0 SOL</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 每周大奖 -->
+    <section class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">WEEKLY <span class="text-memePurple">MEGA DRAW</span></h2>
+                <p class="text-xl text-gray-600">One lucky winner takes home the entire grand prize!</p>
+            </div>
+            
+            <div class="max-w-3xl mx-auto bg-white rounded-3xl border-meme shadow-xl p-8 text-center relative overflow-hidden">
+                <div class="absolute top-0 right-0 text-6xl opacity-10">💎</div>
+                
+                <div class="text-5xl font-bold mb-4 text-memePurple">1,245 SOL</div>
+                <p class="text-xl mb-6">Total Prize Pool</p>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-gray-100 p-4 rounded-xl border-2 border-black">
+                        <p class="text-gray-600">Total Tickets</p>
+                        <p class="text-2xl font-bold">12,450</p>
+                    </div>
+                    
+                    <div class="bg-gray-100 p-4 rounded-xl border-2 border-black">
+                        <p class="text-gray-600">Your Tickets</p>
+                        <p class="text-2xl font-bold">5</p>
+                    </div>
+                    
+                    <div class="bg-gray-100 p-4 rounded-xl border-2 border-black">
+                        <p class="text-gray-600">Chance to Win</p>
+                        <p class="text-2xl font-bold">0.04%</p>
+                    </div>
+                    
+                    <div class="bg-gray-100 p-4 rounded-xl border-2 border-black">
+                        <p class="text-gray-600">Draw In</p>
+                        <p class="text-2xl font-bold">3d 4h</p>
+                    </div>
+                </div>
+                
+                <button class="bg-memePurple hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-lg text-lg">
+                    Get More Tickets
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-memeBlack text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="text-3xl">🚀</div>
+                        <h2 class="text-2xl font-bold">MOONSHOT <span class="text-memePink">LOTTERY</span></h2>
+                    </div>
+                    <p class="text-gray-400">The most meme-tastic lottery on Solana. Win big or go home!</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li><a href="#how-it-works" class="text-gray-400 hover:text-white">How It Works</a></li>
+                        <li><a href="#prizes" class="text-gray-400 hover:text-white">Prizes</a></li>
+                        <li><a href="#leaderboard" class="text-gray-400 hover:text-white">Leaderboard</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Legal</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Disclaimer</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Connect</h3>
+                    <div class="flex space-x-4 mb-4">
+                        <a href="#" class="text-2xl hover:text-memePink transition-colors"><i class="fa fa-twitter"></i></a>
+                        <a href="#" class="text-2xl hover:text-memePink transition-colors"><i class="fa fa-telegram"></i></a>
+                        <a href="#" class="text-2xl hover:text-memePink transition-colors"><i class="fa fa-discord"></i></a>
+                        <a href="#" class="text-2xl hover:text-memePink transition-colors"><i class="fa fa-reddit"></i></a>
+                    </div>
+                    <button id="footer-wallet-connect" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-white transform hover:scale-105 transition-all">
+                        <i class="fa fa-wallet mr-2"></i> 连接钱包
+                    </button>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-500">
+                <p>© 2023 Moonshot Lottery. This is a meme project for entertainment purposes only. Don't spend money you can't afford to lose!</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 通知区域 -->
+    <div id="notification" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm border-2 border-black">
+            <div class="flex items-center">
+                <div id="notification-icon" class="mr-3"></div>
+                <div>
+                    <p id="notification-message" class="text-sm font-medium"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 border-2 border-black">
+            <div class="flex items-center">
+                <div class="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mr-3"></div>
+                <span id="loading-text">处理中...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 (默认隐藏) -->
+    <div id="wallet-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl border-4 border-black p-8 max-w-md w-full mx-4 transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">连接钱包</h3>
+                <button id="close-modal" class="text-2xl">&times;</button>
+            </div>
+            
+            <div class="space-y-4">
+                <button id="phantom-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
+                    <img src="https://picsum.photos/id/1/40/40" alt="Phantom Wallet logo" class="w-8 h-8">
+                    Phantom
+                </button>
+                
+                <button id="solflare-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
+                    <img src="https://picsum.photos/id/2/40/40" alt="Solflare Wallet logo" class="w-8 h-8">
+                    Solflare
+                </button>
+                
+                <button id="coinbase-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
+                    <img src="https://picsum.photos/id/3/40/40" alt="Coinbase Wallet logo" class="w-8 h-8">
+                    Coinbase Wallet
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5Z5ieEbAcfQX0kxGSn9ldGXhzvAwx_8M",
+            authDomain: "chat-294cc.firebaseapp.com",
+            databaseURL: "https://chat-294cc-default-rtdb.firebaseio.com",
+            projectId: "chat-294cc",
+            storageBucket: "chat-294cc.appspot.com",
+            messagingSenderId: "913615304269",
+            appId: "1:913615304269:web:0274ffaccb8e6b678e4e04",
+            measurementId: "G-SJR9NDW86B"
+        };
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Solana 连接
+        const connection = new solanaWeb3.Connection('https://api.devnet.solana.com');
+        let wallet = null;
+        let currentUser = null;
+        let currentRound = null;
+
+        // DOM 元素
+        const connectWalletBtn = document.getElementById('wallet-connect');
+        const walletInfo = document.getElementById('wallet-info');
+        const walletAddress = document.getElementById('wallet-address');
+        const disconnectWalletBtn = document.getElementById('disconnect-wallet');
+        const buyTicketsBtn = document.getElementById('buy-tickets-btn');
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notification-message');
+        const notificationIcon = document.getElementById('notification-icon');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const walletModal = document.getElementById('wallet-modal');
+        const closeModal = document.getElementById('close-modal');
+        const phantomConnect = document.getElementById('phantom-connect');
+        const solflareConnect = document.getElementById('solflare-connect');
+        const coinbaseConnect = document.getElementById('coinbase-connect');
+
+        // 工具函数
+        function showNotification(message, type = 'info') {
+            notificationMessage.textContent = message;
+            notificationIcon.innerHTML = type === 'success' ? 
+                '<i class="fa fa-check-circle text-green-500 text-xl"></i>' :
+                type === 'error' ? 
+                '<i class="fa fa-exclamation-circle text-red-500 text-xl"></i>' :
+                '<i class="fa fa-info-circle text-blue-500 text-xl"></i>';
+            notification.classList.remove('hidden');
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+
+        function showLoading(text = '处理中...') {
+            loadingText.textContent = text;
+            loadingOverlay.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.add('hidden');
+        }
+
+        function updateWalletUI() {
+            if (wallet && wallet.publicKey) {
+                const address = wallet.publicKey.toString();
+                walletAddress.textContent = `${address.slice(0, 4)}...${address.slice(-4)}`;
+                connectWalletBtn.classList.add('hidden');
+                walletInfo.classList.remove('hidden');
+                buyTicketsBtn.classList.remove('hidden');
+            } else {
+                connectWalletBtn.classList.remove('hidden');
+                walletInfo.classList.add('hidden');
+                buyTicketsBtn.classList.add('hidden');
+            }
+        }
+
+        function updateRoundInfo(round) {
+            if (round) {
+                const participants = round.participants || [];
+                const participantCount = participants.length;
+                const totalAmount = round.totalAmount || 0;
+                const status = round.status || 'active';
+                const remaining = Math.max(0, 10 - participantCount);
+
+                // 基础信息
+                document.getElementById('participant-count').textContent = participantCount;
+                document.getElementById('remaining-count').textContent = remaining;
+                document.getElementById('current-pool').textContent = totalAmount;
+                document.getElementById('current-participants').textContent = participantCount;
+                document.getElementById('pool-status').textContent = status === 'active' ? '进行中...' : '已结束';
+
+                // 进度条（基于人数）
+                const progress = Math.min(participantCount * 10, 100);
+                document.getElementById('progress-bar').style.width = `${progress}%`;
+                
+                // 更新进度标签位置
+                const progressLabel = document.getElementById('progress-label');
+                if (progress > 0) {
+                    progressLabel.style.left = `${Math.min(progress, 90)}%`;
+                }
+
+                // 详细统计信息
+                if (participants.length > 0) {
+                    const amounts = participants.map(p => p.amount || 0);
+                    const avgAmount = totalAmount / participantCount;
+                    const maxAmount = Math.max(...amounts);
+                    const minAmount = Math.min(...amounts);
+
+                    document.getElementById('total-amount').textContent = totalAmount;
+                    document.getElementById('avg-amount').textContent = avgAmount.toFixed(1);
+                    document.getElementById('max-amount').textContent = maxAmount;
+                    document.getElementById('min-amount').textContent = minAmount;
+                } else {
+                    document.getElementById('total-amount').textContent = '0';
+                    document.getElementById('avg-amount').textContent = '0';
+                    document.getElementById('max-amount').textContent = '0';
+                    document.getElementById('min-amount').textContent = '0';
+                }
+
+                // 更新参与者列表
+                updateParticipantsList(participants);
+            }
+        }
+
+        // 更新参与者列表
+        function updateParticipantsList(participants) {
+            const participantsList = document.getElementById('participants-list');
+            
+            if (participants.length === 0) {
+                participantsList.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">暂无参与者</div>';
+                return;
+            }
+
+            const participantsHTML = participants.map((participant, index) => {
+                const walletAddress = participant.walletAddress || '';
+                const shortAddress = walletAddress ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}` : '未知';
+                const amount = participant.amount || 0;
+                const timestamp = participant.timestamp ? new Date(participant.timestamp.toDate()).toLocaleTimeString() : '';
+                
+                // 根据金额选择不同的图标和颜色
+                let icon = '👤';
+                let bgColor = 'bg-gray-100';
+                let textColor = 'text-gray-800';
+                
+                if (amount >= 100) {
+                    icon = '🚀';
+                    bgColor = 'bg-red-100';
+                    textColor = 'text-red-800';
+                } else if (amount >= 50) {
+                    icon = '💎';
+                    bgColor = 'bg-purple-100';
+                    textColor = 'text-purple-800';
+                } else if (amount >= 10) {
+                    icon = '🏆';
+                    bgColor = 'bg-yellow-100';
+                    textColor = 'text-yellow-800';
+                } else if (amount >= 5) {
+                    icon = '🥈';
+                    bgColor = 'bg-blue-100';
+                    textColor = 'text-blue-800';
+                } else {
+                    icon = '🥉';
+                    bgColor = 'bg-green-100';
+                    textColor = 'text-green-800';
+                }
+
+                return `
+                    <div class="${bgColor} p-3 rounded-lg border-2 border-black text-center transform hover:scale-105 transition-all">
+                        <div class="text-2xl mb-2">${icon}</div>
+                        <div class="font-bold ${textColor} text-lg">${amount}U</div>
+                        <div class="text-xs text-gray-600 mb-1">${shortAddress}</div>
+                        <div class="text-xs text-gray-500">${timestamp}</div>
+                    </div>
+                `;
+            }).join('');
+
+            participantsList.innerHTML = participantsHTML;
+        }
+
+        function updateUserInfo() {
+            const userInfo = document.getElementById('userInfo');
+            if (currentUser) {
+                userInfo.innerHTML = `
+                    <div>
+                        <span class="text-gray-600">钱包地址:</span>
+                        <p class="text-sm font-mono break-all">${currentUser.walletAddress}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">我的奖券:</span>
+                        <p class="font-semibold">${currentUser.ticketCount || 0} 张</p>
+                    </div>
+                `;
+            } else {
+                userInfo.innerHTML = '<p class="text-gray-500">未连接钱包</p>';
+            }
+        }
+
+        // 钱包连接
+        async function connectWallet(walletType = 'phantom') {
+            try {
+                showLoading('连接钱包中...');
+                
+                let walletProvider;
+                
+                switch(walletType) {
+                    case 'phantom':
+                        if (!window.solana || !window.solana.isPhantom) {
+                            showNotification('请先安装 Phantom 钱包', 'error');
+                            hideLoading();
+                            return;
+                        }
+                        walletProvider = window.solana;
+                        break;
+                    case 'solflare':
+                        if (!window.solflare) {
+                            showNotification('请先安装 Solflare 钱包', 'error');
+                            hideLoading();
+                            return;
+                        }
+                        walletProvider = window.solflare;
+                        break;
+                    case 'coinbase':
+                        if (!window.coinbaseSolana) {
+                            showNotification('请先安装 Coinbase 钱包', 'error');
+                            hideLoading();
+                            return;
+                        }
+                        walletProvider = window.coinbaseSolana;
+                        break;
+                    default:
+                        showNotification('不支持的钱包类型', 'error');
+                        hideLoading();
+                        return;
+                }
+
+                // 连接钱包
+                const response = await walletProvider.connect();
+                wallet = walletProvider;
+                
+                // 创建或获取用户信息
+                const userRef = db.collection('users').doc(response.publicKey.toString());
+                await userRef.set({
+                    walletAddress: response.publicKey.toString(),
+                    createdAt: new Date(),
+                    referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+                }, { merge: true });
+
+                currentUser = {
+                    uid: response.publicKey.toString(),
+                    walletAddress: response.publicKey.toString()
+                };
+
+                updateWalletUI();
+                updateUserInfo();
+                loadCurrentRound();
+                loadUserTickets();
+                loadPoolInfo();
+                showNotification('钱包连接成功！', 'success');
+                walletModal.classList.add('hidden');
+                
+            } catch (error) {
+                console.error('连接钱包失败:', error);
+                showNotification('连接钱包失败，请重试', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 断开钱包连接
+        function disconnectWallet() {
+            if (wallet) {
+                wallet.disconnect();
+                wallet = null;
+                currentUser = null;
+                updateWalletUI();
+                updateUserInfo();
+                showNotification('钱包已断开连接', 'info');
+            }
+        }
+
+        // 加载当前轮次
+        async function loadCurrentRound() {
+            try {
+                const roundsQuery = db.collection('rounds')
+                    .where('status', '==', 'active')
+                    .orderBy('createdAt', 'desc')
+                    .limit(1);
+                
+                const snapshot = await roundsQuery.get();
+                
+                if (!snapshot.empty) {
+                    const round = snapshot.docs[0];
+                    currentRound = {
+                        id: round.id,
+                        ...round.data()
+                    };
+                } else {
+                    // 创建新轮次
+                    const roundRef = await db.collection('rounds').add({
+                        status: 'active',
+                        level: 1,
+                        participants: [],
+                        totalAmount: 0,
+                        createdAt: new Date(),
+                        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                    });
+                    
+                    currentRound = {
+                        id: roundRef.id,
+                        status: 'active',
+                        level: 1,
+                        participants: [],
+                        totalAmount: 0,
+                    };
+                }
+                
+                updateRoundInfo(currentRound);
+                
+            } catch (error) {
+                console.error('加载轮次失败:', error);
+                showNotification('加载轮次失败', 'error');
+            }
+        }
+
+        // 加载用户奖券
+        async function loadUserTickets() {
+            if (!currentUser) return;
+            
+            try {
+                const ticketsQuery = db.collection('tickets')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .limit(10);
+                
+                const snapshot = await ticketsQuery.get();
+                const tickets = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                const myTickets = document.getElementById('myTickets');
+                if (tickets.length > 0) {
+                    myTickets.innerHTML = tickets.map(ticket => `
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                            <div>
+                                <div class="font-semibold">${ticket.amount}U</div>
+                                <div class="text-sm text-gray-600">
+                                    ${new Date(ticket.createdAt.toDate()).toLocaleDateString()}
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                ${ticket.status || '待开奖'}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    myTickets.innerHTML = '<p class="text-gray-500">暂无奖券</p>';
+                }
+                
+                // 更新用户信息中的奖券数量
+                if (currentUser) {
+                    currentUser.ticketCount = tickets.length;
+                    updateUserInfo();
+                }
+                
+            } catch (error) {
+                console.error('加载奖券失败:', error);
+            }
+        }
+
+        // 购票
+        async function buyTicket(amount) {
+            if (!wallet || !currentUser || !currentRound) {
+                showNotification('请先连接钱包', 'error');
+                return;
+            }
+
+            try {
+                showLoading('处理购票中...');
+                
+                // 创建交易
+                const transaction = new solanaWeb3.Transaction();
+                
+                // 这里应该发送到你的项目钱包地址
+                                        const recipientAddress = new solanaWeb3.PublicKey('6N9GiSmCPDQBoLmGGdEF5RyTAu3osQFe4GTFJwFUEhKo');
+                
+                transaction.add(
+                    solanaWeb3.SystemProgram.transfer({
+                        fromPubkey: wallet.publicKey,
+                        toPubkey: recipientAddress,
+                        lamports: amount * solanaWeb3.LAMPORTS_PER_SOL,
+                    })
+                );
+
+                // 发送交易
+                const signature = await wallet.signAndSendTransaction(transaction);
+                await connection.confirmTransaction(signature.signature);
+
+                // 记录购票
+                await recordTicketPurchase(amount, signature.signature);
+
+                showNotification(`成功购买 ${amount}U 奖券！`, 'success');
+                await loadUserTickets();
+                await loadCurrentRound();
+                
+            } catch (error) {
+                console.error('购票失败:', error);
+                showNotification('购票失败，请重试', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 记录购票
+        async function recordTicketPurchase(amount, signature) {
+            try {
+                // 记录奖券
+                await db.collection('tickets').add({
+                    userId: currentUser.uid,
+                    walletAddress: wallet.publicKey.toString(),
+                    level: amount,
+                    amount: amount,
+                    transactionSignature: signature,
+                    createdAt: new Date(),
+                });
+
+                // 更新轮次参与者
+                if (currentRound) {
+                    const roundRef = db.collection('rounds').doc(currentRound.id);
+                    const roundDoc = await roundRef.get();
+                    
+                    if (roundDoc.exists) {
+                        const roundData = roundDoc.data();
+                        const newParticipants = [...(roundData.participants || []), {
+                            userId: currentUser.uid,
+                            walletAddress: wallet.publicKey.toString(),
+                            amount: amount,
+                            timestamp: new Date(),
+                        }];
+
+                        await roundRef.update({
+                            participants: newParticipants,
+                            totalAmount: (roundData.totalAmount || 0) + amount,
+                        });
+
+                        // 检查是否满员
+                        if (newParticipants.length >= 10) {
+                            await triggerLottery(roundRef.id);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('记录购票失败:', error);
+            }
+        }
+
+        // 触发开奖
+        async function triggerLottery(roundId) {
+            try {
+                showNotification('轮次已满员，即将开奖！', 'success');
+                
+                // 更新轮次状态
+                await db.collection('rounds').doc(roundId).update({
+                    status: 'completed',
+                    completedAt: new Date(),
+                });
+
+                // 重新加载轮次
+                await loadCurrentRound();
+            } catch (error) {
+                console.error('开奖失败:', error);
+            }
+        }
+
+        // 加载奖池信息
+        async function loadPoolInfo() {
+            try {
+                const grandPrizeDoc = await db.collection('pools').doc('grandPrize').get();
+                const developerDoc = await db.collection('pools').doc('developer').get();
+                
+                const grandPrizeAmount = grandPrizeDoc.exists ? grandPrizeDoc.data().amount || 0 : 0;
+                const developerAmount = developerDoc.exists ? developerDoc.data().amount || 0 : 0;
+                
+                document.getElementById('grand-prize').textContent = grandPrizeAmount;
+                document.getElementById('developer-pool').textContent = developerAmount;
+                
+                // 计算总奖券数（这里简化处理）
+                const ticketsQuery = await db.collection('lotteryTickets').where('used', '==', false).get();
+                document.getElementById('total-tickets').textContent = ticketsQuery.size;
+                
+            } catch (error) {
+                console.error('加载奖池信息失败:', error);
+            }
+        }
+
+        // 事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            // 钱包连接按钮
+            connectWalletBtn.addEventListener('click', () => {
+                walletModal.classList.remove('hidden');
+            });
+
+            // 页脚钱包连接按钮
+            const footerWalletBtn = document.getElementById('footer-wallet-connect');
+            if (footerWalletBtn) {
+                footerWalletBtn.addEventListener('click', () => {
+                    walletModal.classList.remove('hidden');
+                });
+            }
+
+            // 断开钱包
+            disconnectWalletBtn.addEventListener('click', disconnectWallet);
+
+            // 购票按钮
+            buyTicketsBtn.addEventListener('click', () => {
+                if (!wallet) {
+                    showNotification('请先连接钱包', 'error');
+                    return;
+                }
+                // 滚动到购票区域
+                document.querySelector('#ticket-levels').scrollIntoView({ behavior: 'smooth' });
+            });
+
+            // 模态框关闭
+            closeModal.addEventListener('click', () => {
+                walletModal.classList.add('hidden');
+            });
+
+            // 点击模态框外部关闭
+            walletModal.addEventListener('click', (e) => {
+                if (e.target === walletModal) {
+                    walletModal.classList.add('hidden');
+                }
+            });
+
+            // 钱包连接按钮
+            phantomConnect.addEventListener('click', () => connectWallet('phantom'));
+            solflareConnect.addEventListener('click', () => connectWallet('solflare'));
+            coinbaseConnect.addEventListener('click', () => connectWallet('coinbase'));
+
+            // 购票按钮事件
+            document.querySelectorAll('.buy-ticket-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const amount = parseInt(button.dataset.amount);
+                    buyTicket(amount);
+                });
+            });
+
+            // 平滑滚动
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // 给卡片添加随机旋转角度
+            document.querySelectorAll('.rotate-random').forEach(el => {
+                if (!el.style.getPropertyValue('--rotation')) {
+                    const rotation = (Math.random() * 6) - 3;
+                    el.style.setProperty('--rotation', `${rotation}deg`);
+                }
+            });
+
+            // 初始化加载
+            loadPoolInfo();
+            
+            // 监听钱包连接状态
+            if (window.solana) {
+                window.solana.on('connect', () => {
+                    updateWalletUI();
+                });
+                
+                window.solana.on('disconnect', () => {
+                    disconnectWallet();
+                });
+            }
+        });
+
+        // 实时监听轮次变化
+        db.collection('rounds')
+            .where('status', '==', 'active')
+            .onSnapshot((snapshot) => {
+                if (!snapshot.empty) {
+                    const round = snapshot.docs[0];
+                    currentRound = {
+                        id: round.id,
+                        ...round.data()
+                    };
+                    updateRoundInfo(currentRound);
+                }
+            });
+
+        // 实时监听奖池变化
+        db.collection('pools').onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'modified' || change.type === 'added') {
+                    loadPoolInfo();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
