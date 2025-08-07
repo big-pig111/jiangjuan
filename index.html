@@ -98,6 +98,12 @@
                         <i class="fa fa-sign-out"></i>
                     </button>
                 </div>
+                <div id="userInfo" class="hidden">
+                    <!-- 用户信息将在这里显示 -->
+                </div>
+                <div id="myTickets" class="hidden">
+                    <!-- 我的奖券信息将在这里显示 -->
+                </div>
                 <button class="md:hidden text-2xl">
                     <i class="fa fa-bars"></i>
                 </button>
@@ -694,38 +700,50 @@
                 const remaining = Math.max(0, 10 - participantCount);
 
                 // 基础信息
-                document.getElementById('participant-count').textContent = participantCount;
-                document.getElementById('remaining-count').textContent = remaining;
-                document.getElementById('current-pool').textContent = totalAmount;
-                document.getElementById('current-participants').textContent = participantCount;
-                document.getElementById('pool-status').textContent = status === 'active' ? '进行中...' : '已结束';
+                const participantCountElement = document.getElementById('participant-count');
+                const remainingCountElement = document.getElementById('remaining-count');
+                const currentPoolElement = document.getElementById('current-pool');
+                const currentParticipantsElement = document.getElementById('current-participants');
+                const poolStatusElement = document.getElementById('pool-status');
+                const progressBarElement = document.getElementById('progress-bar');
+                const progressLabelElement = document.getElementById('progress-label');
+
+                if (participantCountElement) participantCountElement.textContent = participantCount;
+                if (remainingCountElement) remainingCountElement.textContent = remaining;
+                if (currentPoolElement) currentPoolElement.textContent = totalAmount;
+                if (currentParticipantsElement) currentParticipantsElement.textContent = participantCount;
+                if (poolStatusElement) poolStatusElement.textContent = status === 'active' ? '进行中...' : '已结束';
 
                 // 进度条（基于人数）
                 const progress = Math.min(participantCount * 10, 100);
-                document.getElementById('progress-bar').style.width = `${progress}%`;
+                if (progressBarElement) progressBarElement.style.width = `${progress}%`;
                 
                 // 更新进度标签位置
-                const progressLabel = document.getElementById('progress-label');
-                if (progress > 0) {
-                    progressLabel.style.left = `${Math.min(progress, 90)}%`;
+                if (progressLabelElement && progress > 0) {
+                    progressLabelElement.style.left = `${Math.min(progress, 90)}%`;
                 }
 
                 // 详细统计信息
+                const totalAmountElement = document.getElementById('total-amount');
+                const avgAmountElement = document.getElementById('avg-amount');
+                const maxAmountElement = document.getElementById('max-amount');
+                const minAmountElement = document.getElementById('min-amount');
+
                 if (participants.length > 0) {
                     const amounts = participants.map(p => p.amount || 0);
                     const avgAmount = totalAmount / participantCount;
                     const maxAmount = Math.max(...amounts);
                     const minAmount = Math.min(...amounts);
 
-                    document.getElementById('total-amount').textContent = totalAmount;
-                    document.getElementById('avg-amount').textContent = avgAmount.toFixed(1);
-                    document.getElementById('max-amount').textContent = maxAmount;
-                    document.getElementById('min-amount').textContent = minAmount;
+                    if (totalAmountElement) totalAmountElement.textContent = totalAmount;
+                    if (avgAmountElement) avgAmountElement.textContent = avgAmount.toFixed(1);
+                    if (maxAmountElement) maxAmountElement.textContent = maxAmount;
+                    if (minAmountElement) minAmountElement.textContent = minAmount;
                 } else {
-                    document.getElementById('total-amount').textContent = '0';
-                    document.getElementById('avg-amount').textContent = '0';
-                    document.getElementById('max-amount').textContent = '0';
-                    document.getElementById('min-amount').textContent = '0';
+                    if (totalAmountElement) totalAmountElement.textContent = '0';
+                    if (avgAmountElement) avgAmountElement.textContent = '0';
+                    if (maxAmountElement) maxAmountElement.textContent = '0';
+                    if (minAmountElement) minAmountElement.textContent = '0';
                 }
 
                 // 更新参与者列表
@@ -790,19 +808,21 @@
 
         function updateUserInfo() {
             const userInfo = document.getElementById('userInfo');
-            if (currentUser) {
-                userInfo.innerHTML = `
-                    <div>
-                        <span class="text-gray-600">钱包地址:</span>
-                        <p class="text-sm font-mono break-all">${currentUser.walletAddress}</p>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">我的奖券:</span>
-                        <p class="font-semibold">${currentUser.ticketCount || 0} 张</p>
-                    </div>
-                `;
-            } else {
-                userInfo.innerHTML = '<p class="text-gray-500">未连接钱包</p>';
+            if (userInfo) {
+                if (currentUser) {
+                    userInfo.innerHTML = `
+                        <div>
+                            <span class="text-gray-600">钱包地址:</span>
+                            <p class="text-sm font-mono break-all">${currentUser.walletAddress}</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">我的奖券:</span>
+                            <p class="font-semibold">${currentUser.ticketCount || 0} 张</p>
+                        </div>
+                    `;
+                } else {
+                    userInfo.innerHTML = '<p class="text-gray-500">未连接钱包</p>';
+                }
             }
         }
 
@@ -848,18 +868,26 @@
                 const response = await walletProvider.connect();
                 wallet = walletProvider;
                 
-                // 创建或获取用户信息
-                const userRef = db.collection('users').doc(response.publicKey.toString());
-                await userRef.set({
-                    walletAddress: response.publicKey.toString(),
-                    createdAt: new Date(),
-                    referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-                }, { merge: true });
-
+                // 使用钱包地址作为用户ID进行匿名认证
+                const walletAddress = response.publicKey.toString();
+                
+                // 创建或获取用户信息（不依赖Firebase Auth）
                 currentUser = {
-                    uid: response.publicKey.toString(),
-                    walletAddress: response.publicKey.toString()
+                    uid: walletAddress,
+                    walletAddress: walletAddress
                 };
+
+                // 尝试创建用户记录（如果失败也不会阻止连接）
+                try {
+                    const userRef = db.collection('users').doc(walletAddress);
+                    await userRef.set({
+                        walletAddress: walletAddress,
+                        createdAt: new Date(),
+                        referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+                    }, { merge: true });
+                } catch (firebaseError) {
+                    console.warn('无法创建用户记录，但钱包连接成功:', firebaseError);
+                }
 
                 updateWalletUI();
                 updateUserInfo();
@@ -950,22 +978,24 @@
                 }));
                 
                 const myTickets = document.getElementById('myTickets');
-                if (tickets.length > 0) {
-                    myTickets.innerHTML = tickets.map(ticket => `
-                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
-                            <div>
-                                <div class="font-semibold">${ticket.amount}U</div>
-                                <div class="text-sm text-gray-600">
-                                    ${new Date(ticket.createdAt.toDate()).toLocaleDateString()}
+                if (myTickets) {
+                    if (tickets.length > 0) {
+                        myTickets.innerHTML = tickets.map(ticket => `
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <div>
+                                    <div class="font-semibold">${ticket.amount}U</div>
+                                    <div class="text-sm text-gray-600">
+                                        ${new Date(ticket.createdAt.toDate()).toLocaleDateString()}
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    ${ticket.status || '待开奖'}
                                 </div>
                             </div>
-                            <div class="text-sm text-gray-500">
-                                ${ticket.status || '待开奖'}
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    myTickets.innerHTML = '<p class="text-gray-500">暂无奖券</p>';
+                        `).join('');
+                    } else {
+                        myTickets.innerHTML = '<p class="text-gray-500">暂无奖券</p>';
+                    }
                 }
                 
                 // 更新用户信息中的奖券数量
@@ -976,6 +1006,11 @@
                 
             } catch (error) {
                 console.error('加载奖券失败:', error);
+                // 如果失败，设置默认值
+                if (currentUser) {
+                    currentUser.ticketCount = 0;
+                    updateUserInfo();
+                }
             }
         }
 
@@ -1092,12 +1127,16 @@
                 const grandPrizeAmount = grandPrizeDoc.exists ? grandPrizeDoc.data().amount || 0 : 0;
                 const developerAmount = developerDoc.exists ? developerDoc.data().amount || 0 : 0;
                 
-                document.getElementById('grand-prize').textContent = grandPrizeAmount;
-                document.getElementById('developer-pool').textContent = developerAmount;
+                const grandPrizeElement = document.getElementById('grand-prize');
+                const developerPoolElement = document.getElementById('developer-pool');
+                const totalTicketsElement = document.getElementById('total-tickets');
+                
+                if (grandPrizeElement) grandPrizeElement.textContent = grandPrizeAmount;
+                if (developerPoolElement) developerPoolElement.textContent = developerAmount;
                 
                 // 计算总奖券数（这里简化处理）
                 const ticketsQuery = await db.collection('lotteryTickets').where('used', '==', false).get();
-                document.getElementById('total-tickets').textContent = ticketsQuery.size;
+                if (totalTicketsElement) totalTicketsElement.textContent = ticketsQuery.size;
                 
             } catch (error) {
                 console.error('加载奖池信息失败:', error);
