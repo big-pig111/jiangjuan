@@ -659,8 +659,8 @@
             });
         }
 
-        // Solana 连接
-        const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+        // Solana 连接 - 使用更可靠的 RPC 端点
+        const connection = new solanaWeb3.Connection('https://small-holy-forest.solana-mainnet.quiknode.pro/b59315ea187b3de1b3542c5c25d7f2d5b5410ff4/');
         let wallet = null;
         let currentUser = null;
         let currentRound = null;
