@@ -1116,14 +1116,28 @@
                 );
 
                 // 获取最新的 blockhash 并设置 feePayer
-                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
                 transaction.recentBlockhash = blockhash;
                 transaction.feePayer = wallet.publicKey;
 
-                // 签名并发送交易（兼容不同钱包）
+                // 签名并发送交易
                 const signedTx = await wallet.signTransaction(transaction);
-                const txid = await connection.sendRawTransaction(signedTx.serialize());
-                await connection.confirmTransaction({ signature: txid, blockhash, lastValidBlockHeight }, 'confirmed');
+                const txid = await connection.sendRawTransaction(signedTx.serialize(), {
+                    skipPreflight: false,
+                    preflightCommitment: 'confirmed',
+                    maxRetries: 3
+                });
+                
+                // 等待交易确认
+                const confirmation = await connection.confirmTransaction({
+                    signature: txid,
+                    blockhash: blockhash,
+                    lastValidBlockHeight: lastValidBlockHeight
+                }, 'confirmed');
+
+                if (confirmation.value.err) {
+                    throw new Error('交易确认失败');
+                }
 
                 // 记录购票
                 await recordTicketPurchase(amount, txid);
