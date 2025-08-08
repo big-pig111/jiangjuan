@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>玩法说明 | 抽奖应用</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+</head>
+<body class="bg-white text-gray-800">
+  <div class="max-w-3xl mx-auto px-6 py-10">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-memePurple mb-6">玩法说明（白皮书）</h1>
+
+    <div class="space-y-8 leading-relaxed">
+      <section>
+        <h2 class="text-2xl font-bold mb-3">一、基本规则</h2>
+        <p>每轮最多 10 人参与，即可自动开奖。支持 5 个档位：1U、2U、5U、10U、100U。U 按照当前 SOL 美元价格动态折算，实际支付为 SOL。</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">二、奖池分配</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>80% 给当轮中奖者</li>
+          <li>10% 回购代币（平台留存）</li>
+          <li>5% 推荐返佣（10 人有推荐则平分，每人 0.5U，一轮合计 5U）</li>
+          <li>4% 进入周度总奖池</li>
+          <li>1% 进入开发者奖池</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">三、奖券与周大奖</h2>
+        <p>每消费满 10U 生成 1 张奖券（向下取整）。系统每周定时从所有未使用的奖券中抽取 1 名，获得周度总奖池全部金额，抽中后该奖券标记为已使用。</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">四、链上支付与核验</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>用户通过钱包在 Solana 主网完成转账，目标地址为平台项目地址。</li>
+          <li>后端云函数会到链上核验交易哈希，确认的有效入账才会记录到当轮参与名单。</li>
+          <li>记录采用幂等处理：同一交易哈希仅能记录一次，避免重复记入。</li>
+          <li>入账金额按链上 lamports 折算为 SOL，再乘以当前 SOL 美元价格得到 U 金额。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">五、开奖与透明度</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>每轮满 10 人自动开奖，采用后端随机选择（可在后续版本切换为可验证随机源）。</li>
+          <li>中奖记录与奖池变动均写入 Firestore，可在前端页面实时查看。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">六、推荐返佣</h2>
+        <p>如果参与者绑定了推荐人，则每轮返佣总额 5U 会在当轮有效参与者的推荐人之间均分（示例：10 人均有推荐人，则每位推荐人获得 0.5U）。返佣余额可在后续版本中发起提取。</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">七、风险提示</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>加密资产价格波动较大，请理性参与。</li>
+          <li>请确保使用官方钱包并在主网环境操作，确认转账地址无误。</li>
+          <li>平台不保证任何固定收益，本产品为娱乐性质抽奖应用。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">八、联系方式</h2>
+        <p>如有问题或建议，可通过站内反馈或开源仓库提交 Issue 与我们联系。</p>
+      </section>
+    </div>
+  </div>
+</body>
+</html>
+
+
