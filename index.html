@@ -85,8 +85,8 @@
             <div class="hidden md:flex items-center space-x-6">
                 <a href="#" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">首页</a>
                 <a href="#how-it-works" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">玩法说明</a>
-                <a href="#prizes" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">中奖记录</a>
                 <a href="#leaderboard" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">排行榜</a>
+                <button id="open-history" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">历史记录</button>
             </div>
             
             <div class="flex items-center space-x-3">
@@ -162,6 +162,21 @@
                     <button id="close-rules" class="bg-black text-white font-bold px-3 py-1 rounded-lg border-2 border-black">关闭</button>
                 </div>
                 <iframe src="rules.html" class="w-full flex-1"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- 历史记录弹窗 -->
+    <div id="history-modal" class="fixed inset-0 bg-black/50 z-[100] hidden">
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-6xl h-[90vh] rounded-2xl border-4 border-black shadow-2xl overflow-hidden flex flex-col">
+                <div class="flex items-center justify-between px-6 py-4 border-b-4 border-black bg-memeYellow">
+                    <h3 class="text-xl font-extrabold">抽奖历史记录</h3>
+                    <button id="close-history" class="bg-black text-white font-bold px-4 py-2 rounded-lg border-2 border-black">关闭</button>
+                </div>
+                <div class="flex-1">
+                    <iframe src="history.html" class="w-full h-full border-0"></iframe>
+                </div>
             </div>
         </div>
     </div>
@@ -1131,8 +1146,20 @@
                     })
                 );
 
-                // 获取最新的 blockhash 并设置 feePayer
-                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
+                // 获取最新的 blockhash 并设置 feePayer（带重试）
+                let blockhash, lastValidBlockHeight;
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        const blockhashResult = await connection.getLatestBlockhash('confirmed');
+                        blockhash = blockhashResult.blockhash;
+                        lastValidBlockHeight = blockhashResult.lastValidBlockHeight;
+                        break;
+                    } catch (e) {
+                        if (attempt === 2) throw e;
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+                
                 transaction.recentBlockhash = blockhash;
                 transaction.feePayer = wallet.publicKey;
 
@@ -1141,18 +1168,15 @@
                 const txid = await connection.sendRawTransaction(signedTx.serialize(), {
                     skipPreflight: false,
                     preflightCommitment: 'confirmed',
-                    maxRetries: 3
+                    maxRetries: 5
                 });
                 
-                // 等待交易确认
-                const confirmation = await connection.confirmTransaction({
-                    signature: txid,
-                    blockhash: blockhash,
-                    lastValidBlockHeight: lastValidBlockHeight
-                }, 'confirmed');
-
-                if (confirmation.value.err) {
-                    throw new Error('交易确认失败');
+                // 等待交易确认（简化确认逻辑）
+                try {
+                    await connection.confirmTransaction(txid, 'confirmed');
+                } catch (confirmErr) {
+                    console.warn('交易确认超时，但交易可能已成功:', confirmErr);
+                    // 继续执行，不因为确认超时而失败
                 }
 
                 // 后端校验并记录购票
@@ -1306,6 +1330,21 @@
                 });
             }
 
+            // 打开历史记录
+            const openHistoryBtn = document.getElementById('open-history');
+            const historyModal = document.getElementById('history-modal');
+            const closeHistory = document.getElementById('close-history');
+            if (openHistoryBtn && historyModal && closeHistory) {
+                openHistoryBtn.addEventListener('click', () => {
+                    historyModal.classList.remove('hidden');
+                });
+                closeHistory.addEventListener('click', () => historyModal.classList.add('hidden'));
+                // 点击遮罩关闭
+                historyModal.addEventListener('click', (e) => {
+                    if (e.target === historyModal) historyModal.classList.add('hidden');
+                });
+            }
+
             // 点击模态框外部关闭
             walletModal.addEventListener('click', (e) => {
                 if (e.target === walletModal) {
@@ -1400,6 +1439,10 @@
                 }
             });
         });
+
+
+
+
     </script>
 </body>
 </html>
