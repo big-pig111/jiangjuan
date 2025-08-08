@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -1139,8 +1140,19 @@
                     throw new Error('交易确认失败');
                 }
 
-                // 记录购票
-                await recordTicketPurchase(amount, txid);
+                // 后端校验并记录购票
+                if (typeof firebase !== 'undefined' && firebase.functions) {
+                    try {
+                        const functionsClient = firebase.functions();
+                        const record = firebase.app().functions().httpsCallable('recordPurchase');
+                        await record({ amount, signature: txid, walletAddress: wallet.publicKey.toString() });
+                    } catch (fnErr) {
+                        console.warn('云函数记录购票失败，将回退到前端写入:', fnErr);
+                        await recordTicketPurchase(amount, txid);
+                    }
+                } else {
+                    await recordTicketPurchase(amount, txid);
+                }
 
                 showNotification(`成功购买 ${amount}U 奖券！(${solAmount.toFixed(4)} SOL)`, 'success');
                 await loadUserTickets();
@@ -1307,6 +1319,21 @@
 
             // 初始化加载
             loadPoolInfo();
+            // 确保有活动轮次（通过云函数创建或获取）
+            (async () => {
+                try {
+                    if (typeof firebase !== 'undefined' && firebase.functions) {
+                        const createOrGet = firebase.app().functions().httpsCallable('createOrGetActiveRound');
+                        const res = await createOrGet({});
+                        if (res && res.data) {
+                            currentRound = { id: res.data.id, ...res.data };
+                            updateRoundInfo(currentRound);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('初始化活动轮次失败（将依赖实时监听）:', e);
+                }
+            })();
             // 初始化SOL价格显示
             updateSolPriceDisplay();
             fetchSolPrice(); // 初始化时调用获取 SOL 价格
