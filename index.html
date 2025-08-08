@@ -118,7 +118,7 @@
     </nav>
 
     <!-- 英雄区域 -->
-    <header class="relative bg-gradient-to-br from-memePurple via-purple-700 to-memeBlue clip-path-slant py-16 md:py-24 overflow-hidden">
+    <header class="relative bg-gradient-to-br from-memePurple via-purple-700 to-memeBlue clip-path-slant pt-16 md:pt-24 pb-32 md:pb-40 overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-full opacity-10">
             <div class="absolute top-10 left-10 text-9xl">🚀</div>
             <div class="absolute top-40 right-20 text-8xl">💰</div>
@@ -145,7 +145,7 @@
             </div>
         </div>
         
-        <div class="absolute -bottom-6 left-0 right-0 flex justify-center">
+        <div class="absolute bottom-6 left-0 right-0 flex justify-center pointer-events-none z-20">
             <div class="bg-white px-6 py-3 rounded-full border-4 border-black shadow-lg flex items-center space-x-2 animate-bounce">
                 <span class="font-bold">Scroll Down</span>
                 <i class="fa fa-chevron-down"></i>
@@ -154,7 +154,7 @@
     </header>
 
     <!-- 当前奖池状态 -->
-    <section class="py-16 bg-white">
+    <section class="pt-20 pb-16 bg-white">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
                 <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">当前 <span class="text-memePink">轮次</span></h2>
@@ -163,10 +163,12 @@
             
             <div class="max-w-4xl mx-auto">
                 <!-- 进度条 -->
-                <div class="bg-gray-200 rounded-full h-12 mb-8 border-4 border-black overflow-hidden relative">
-                    <div id="progress-bar" class="bg-gradient-to-r from-memeGreen to-memeBlue h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                    <div id="progress-label" class="absolute left-[50%] -translate-x-1/2 -translate-y-1/2">
-                        <div class="bg-memeYellow text-black font-bold px-4 py-1 rounded-full border-2 border-black transform rotate-[-5deg]">
+                <div class="relative mb-12 md:mb-14">
+                    <div class="bg-gray-200 rounded-full h-12 border-4 border-black overflow-hidden">
+                        <div id="progress-bar" class="bg-gradient-to-r from-memeGreen to-memeBlue h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div id="progress-label" class="absolute top-1/2 left-[50%] -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                        <div class="bg-memeYellow text-black font-bold px-4 py-1 rounded-full border-2 border-black shadow-md transform rotate-[-5deg]">
                             <span id="participant-count">0</span>/10 人
                         </div>
                     </div>
