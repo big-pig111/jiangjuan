@@ -513,12 +513,12 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-white/90 p-5 rounded-xl border-2 border-black">
                             <h3 class="text-xl font-bold mb-2">Your Referrals</h3>
-                            <p class="text-3xl font-bold">12 People</p>
+                            <p id="referral-people" class="text-3xl font-bold">0</p>
                         </div>
                         
                         <div class="bg-white/90 p-5 rounded-xl border-2 border-black">
-                            <h3 class="text-xl font-bold mb-2">Earnings</h3>
-                            <p class="text-3xl font-bold">6.0 SOL</p>
+                            <h3 class="text-xl font-bold mb-2">Earnings (U)</h3>
+                            <p class="text-3xl font-bold"><span id="referral-earnings">0</span> U</p>
                         </div>
                     </div>
                 </div>
@@ -785,6 +785,8 @@
         const referralLinkInput = document.getElementById('referral-link-input');
         const copyReferralLinkBtn = document.getElementById('copy-referral-link-btn');
         const referralBalanceEl = document.getElementById('referral-balance');
+        const referralPeopleEl = document.getElementById('referral-people');
+        const referralEarningsEl = document.getElementById('referral-earnings');
 
         // 工具函数
         function showNotification(message, type = 'info') {
@@ -1226,6 +1228,16 @@
                         if (res && res.data && referralBalanceEl) {
                             referralBalanceEl.textContent = (res.data.balance || 0).toString();
                         }
+                        // 统计邀请人数与累计收益
+                        const myWallet = wallet.publicKey.toString();
+                        // 被我邀请的人数：users 中 referrer == myWallet
+                        const invitedSnap = await db.collection('users').where('referrer', '==', myWallet).get();
+                        if (referralPeopleEl) referralPeopleEl.textContent = invitedSnap.size.toString();
+                        // 我的累计返佣总额：referralRewards 中 userId == myWallet 累加 amount
+                        const rewardsSnap = await db.collection('referralRewards').where('userId', '==', myWallet).get();
+                        let totalEarn = 0;
+                        rewardsSnap.forEach(doc => { const a = Number(doc.data().amount || 0); if (!Number.isNaN(a)) totalEarn += a; });
+                        if (referralEarningsEl) referralEarningsEl.textContent = totalEarn.toString();
                     }
                 } catch (e) {
                     // 忽略余额获取失败
