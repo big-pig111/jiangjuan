@@ -498,11 +498,16 @@
                     
                     <div class="bg-white p-6 rounded-xl border-2 border-black mb-6">
                         <div class="flex flex-col md:flex-row gap-4">
-                            <input type="text" value="https://moonshotlottery.com/?ref=YOUR_WALLET" class="flex-1 font-meme p-3 border-2 border-gray-300 rounded-lg" readonly>
-                            <button class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg border-2 border-black transform hover:scale-105 transition-all whitespace-nowrap">
+                            <input id="referral-link-input" type="text" value="" placeholder="连接钱包后生成邀请链接" class="flex-1 font-meme p-3 border-2 border-gray-300 rounded-lg" readonly>
+                            <button id="copy-referral-link-btn" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg border-2 border-black transform hover:scale-105 transition-all whitespace-nowrap">
                                 Copy Link
                             </button>
                         </div>
+                        <div class="mt-4 flex items-center justify-between">
+                            <div class="text-white">我的返佣余额</div>
+                            <div id="referral-balance" class="text-2xl font-extrabold text-memeYellow">0</div>
+                        </div>
+                        <p class="mt-2 text-white/90 text-sm">返佣将累计到余额，当累计达到 <strong>1U</strong> 时自动发放或可发起提现。</p>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -711,6 +716,7 @@
         let currentUser = null;
         let currentRound = null;
         let currentSolPrice = 1; // 默认 SOL 价格，将在初始化时更新
+        let referralReferrer = null; // 当前访问来源推荐人地址
 
         // 获取 SOL 价格
         async function fetchSolPrice() {
@@ -776,6 +782,9 @@
         const drawResultModal = document.getElementById('draw-result-modal');
         const closeDrawResult = document.getElementById('close-draw-result');
         const drawResultContent = document.getElementById('draw-result-content');
+        const referralLinkInput = document.getElementById('referral-link-input');
+        const copyReferralLinkBtn = document.getElementById('copy-referral-link-btn');
+        const referralBalanceEl = document.getElementById('referral-balance');
 
         // 工具函数
         function showNotification(message, type = 'info') {
@@ -811,10 +820,17 @@
                 connectWalletBtn.classList.add('hidden');
                 walletInfo.classList.remove('hidden');
                 buyTicketsBtn.classList.remove('hidden');
+                // 生成邀请链接
+                if (referralLinkInput) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('ref', address);
+                    referralLinkInput.value = url.toString();
+                }
             } else {
                 connectWalletBtn.classList.remove('hidden');
                 walletInfo.classList.add('hidden');
                 buyTicketsBtn.classList.add('hidden');
+                if (referralLinkInput) referralLinkInput.value = '';
             }
         }
         
@@ -1202,6 +1218,18 @@
                     currentUser.ticketCount = tickets.length;
                     updateUserInfo();
                 }
+                // 刷新返佣余额显示
+                try {
+                    if (typeof firebase !== 'undefined' && firebase.functions && wallet && wallet.publicKey) {
+                        const getBalance = firebase.app().functions().httpsCallable('getReferralBalance');
+                        const res = await getBalance({});
+                        if (res && res.data && referralBalanceEl) {
+                            referralBalanceEl.textContent = (res.data.balance || 0).toString();
+                        }
+                    }
+                } catch (e) {
+                    // 忽略余额获取失败
+                }
                 
             } catch (error) {
                 console.error('加载奖券失败:', error);
@@ -1284,7 +1312,7 @@
                     try {
                         const functionsClient = firebase.functions();
                         const record = firebase.app().functions().httpsCallable('recordPurchase');
-                        await record({ amount, signature: txid, walletAddress: wallet.publicKey.toString() });
+                        await record({ amount, signature: txid, walletAddress: wallet.publicKey.toString(), referrer: referralReferrer });
                     } catch (fnErr) {
                         console.warn('云函数记录购票失败，将回退到前端写入:', fnErr);
                         await recordTicketPurchase(amount, txid);
@@ -1317,6 +1345,7 @@
                     level: amount,
                     amount: amount,
                     transactionSignature: signature,
+                    referrer: referralReferrer || null,
                     createdAt: new Date(),
                 });
 
@@ -1386,6 +1415,15 @@
 
         // 事件监听
         document.addEventListener('DOMContentLoaded', function() {
+            // 解析 URL 推荐人参数
+            try {
+                const url = new URL(window.location.href);
+                const ref = url.searchParams.get('ref');
+                if (ref && typeof ref === 'string' && ref.length > 20) {
+                    referralReferrer = ref;
+                }
+            } catch (_) {}
+
             // 钱包连接按钮
             connectWalletBtn.addEventListener('click', () => {
                 walletModal.classList.remove('hidden');
@@ -1472,6 +1510,19 @@
                     buyTicket(amount);
                 });
             });
+
+            // 复制邀请链接
+            if (copyReferralLinkBtn && referralLinkInput) {
+                copyReferralLinkBtn.addEventListener('click', async () => {
+                    try {
+                        if (!referralLinkInput.value) return;
+                        await navigator.clipboard.writeText(referralLinkInput.value);
+                        showNotification('邀请链接已复制', 'success');
+                    } catch (e) {
+                        showNotification('复制失败，请手动复制', 'error');
+                    }
+                });
+            }
 
             // 平滑滚动
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
