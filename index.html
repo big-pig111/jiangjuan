@@ -181,6 +181,21 @@
         </div>
     </div>
 
+    <!-- 开奖结果弹窗 -->
+    <div id="draw-result-modal" class="fixed inset-0 bg-black/50 z-[100] hidden">
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl border-4 border-black shadow-2xl overflow-hidden flex flex-col">
+                <div class="flex items-center justify-between px-6 py-4 border-b-4 border-black bg-memeYellow">
+                    <h3 class="text-xl font-extrabold">🎉 开奖结果</h3>
+                    <button id="close-draw-result" class="bg-black text-white font-bold px-4 py-2 rounded-lg border-2 border-black">关闭</button>
+                </div>
+                <div id="draw-result-content" class="p-6 overflow-y-auto flex-1">
+                    <!-- 开奖结果内容将通过脚本注入 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 当前奖池状态 -->
     <section class="pt-20 pb-16 bg-white">
         <div class="container mx-auto px-4">
@@ -758,6 +773,9 @@
         const phantomConnect = document.getElementById('phantom-connect');
         const solflareConnect = document.getElementById('solflare-connect');
         const coinbaseConnect = document.getElementById('coinbase-connect');
+        const drawResultModal = document.getElementById('draw-result-modal');
+        const closeDrawResult = document.getElementById('close-draw-result');
+        const drawResultContent = document.getElementById('draw-result-content');
 
         // 工具函数
         function showNotification(message, type = 'info') {
@@ -772,6 +790,10 @@
                 notification.classList.add('hidden');
             }, 3000);
         }
+
+        // 轮次监听取消器与已展示标记，避免重复弹窗
+        let activeRoundUnsubscribe = null;
+        let lastResultShownRoundId = null;
 
         function showLoading(text = '处理中...') {
             loadingText.textContent = text;
@@ -909,6 +931,84 @@
             }).join('');
 
             participantsList.innerHTML = participantsHTML;
+        }
+
+        // 显示开奖结果弹窗（复用历史记录详情样式）
+        function showDrawResult(round) {
+            if (!round) return;
+            const winner = round.winner;
+            const participants = Array.isArray(round.participants) ? round.participants : [];
+
+            const winnerBlock = winner ? `
+                <div class="bg-memeYellow p-4 rounded-lg border-2 border-black mb-4">
+                    <h4 class="font-bold text-lg mb-2">🏆 中奖者</h4>
+                    <div class="space-y-1 text-sm">
+                        <div><strong>钱包地址:</strong> ${winner.walletAddress || '-'}</div>
+                        <div><strong>用户ID:</strong> ${winner.userId || '-'}</div>
+                        <div><strong>参与金额:</strong> ${winner.amount || 0}U</div>
+                        <div><strong>参与时间:</strong> ${winner.timestamp ? new Date(winner.timestamp.toDate()).toLocaleString() : '未知'}</div>
+                    </div>
+                </div>
+            ` : '';
+
+            const participantsList = participants.length > 0 ? participants.map((p, idx) => `
+                <div class="flex justify-between items-center py-2 border-b border-gray-200 ${winner && p.walletAddress === winner.walletAddress ? 'bg-memeYellow' : ''}">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm font-bold">#${idx + 1}</span>
+                        <div>
+                            <div class="text-sm font-medium">${p.walletAddress || '-'}</div>
+                            <div class="text-xs text-gray-500">${p.timestamp ? new Date(p.timestamp.toDate()).toLocaleString() : '未知'}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-bold">${p.amount || 0}U</div>
+                        ${winner && p.walletAddress === winner.walletAddress ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">🏆 中奖</span>' : ''}
+                    </div>
+                </div>
+            `).join('') : '<p class="text-gray-500">暂无参与者</p>';
+
+            drawResultContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-lg mb-2">轮次信息</h4>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><strong>轮次ID:</strong> ${round.id}</div>
+                            <div><strong>状态:</strong> 已完成</div>
+                            <div><strong>总金额:</strong> ${round.totalAmount || 0}U</div>
+                            <div><strong>中奖金额:</strong> ${round.prizeAmount || 0}U</div>
+                            <div><strong>回购金额:</strong> ${round.buybackAmount || 0}U</div>
+                            <div><strong>推荐返佣:</strong> ${round.referralAmount || 0}U</div>
+                            <div><strong>总奖池:</strong> ${round.grandPrizeAmount || 0}U</div>
+                            <div><strong>开发者:</strong> ${round.developerAmount || 0}U</div>
+                        </div>
+                    </div>
+                    ${winnerBlock}
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-lg mb-2">参与者列表（${participants.length}人）</h4>
+                        <div class="max-h-60 overflow-y-auto">
+                            ${participantsList}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            drawResultModal.classList.remove('hidden');
+        }
+
+        // 监听当前活动轮次的状态变化（当变为 completed 且有 winner 时弹窗）
+        function attachRoundListener(roundId) {
+            if (!roundId) return;
+            try { if (typeof activeRoundUnsubscribe === 'function') activeRoundUnsubscribe(); } catch (_) {}
+
+            activeRoundUnsubscribe = db.collection('rounds').doc(roundId).onSnapshot((doc) => {
+                if (!doc.exists) return;
+                const data = doc.data();
+                // 仅当本轮首次完成时展示
+                if (data && data.status === 'completed' && data.winner && lastResultShownRoundId !== doc.id) {
+                    lastResultShownRoundId = doc.id;
+                    showDrawResult({ id: doc.id, ...data });
+                }
+            });
         }
 
         function updateUserInfo() {
@@ -1345,6 +1445,14 @@
                 });
             }
 
+            // 开奖结果弹窗 - 关闭与遮罩点击关闭
+            if (closeDrawResult && drawResultModal) {
+                closeDrawResult.addEventListener('click', () => drawResultModal.classList.add('hidden'));
+                drawResultModal.addEventListener('click', (e) => {
+                    if (e.target === drawResultModal) drawResultModal.classList.add('hidden');
+                });
+            }
+
             // 点击模态框外部关闭
             walletModal.addEventListener('click', (e) => {
                 if (e.target === walletModal) {
@@ -1395,6 +1503,7 @@
                         if (res && res.data) {
                             currentRound = { id: res.data.id, ...res.data };
                             updateRoundInfo(currentRound);
+                            if (currentRound && currentRound.id) attachRoundListener(currentRound.id);
                         }
                     }
                 } catch (e) {
@@ -1428,6 +1537,7 @@
                         ...round.data()
                     };
                     updateRoundInfo(currentRound);
+                    if (currentRound && currentRound.id) attachRoundListener(currentRound.id);
                 }
             });
 
