@@ -1,73 +1,74 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>玩法说明 | 抽奖应用</title>
+  <title>How to Play | Lottery App</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 </head>
 <body class="bg-white text-gray-800">
   <div class="max-w-3xl mx-auto px-6 py-10">
-    <h1 class="text-3xl md:text-4xl font-extrabold text-memePurple mb-6">玩法说明（白皮书）</h1>
+    <h1 class="text-3xl md:text-4xl font-extrabold text-memePurple mb-6">How to Play (Whitepaper)</h1>
 
     <div class="space-y-8 leading-relaxed">
       <section>
-        <h2 class="text-2xl font-bold mb-3">一、基本规则</h2>
-        <p>每轮最多 10 人参与，即可自动开奖。支持 5 个档位：1U、2U、5U、10U、100U。U 按照当前 SOL 美元价格动态折算，实际支付为 SOL。</p>
+        <h2 class="text-2xl font-bold mb-3">1. Basic Rules</h2>
+        <p>Each round draws automatically once there are 10 participants. There are 5 tiers: 1U, 2U, 5U, 10U, and 100U. The U amount is dynamically converted based on the current SOL/USD price, and payment is made in SOL.</p>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold mb-3">二、奖池分配</h2>
+        <h2 class="text-2xl font-bold mb-3">2. Prize Distribution</h2>
         <ul class="list-disc pl-6 space-y-1">
-          <li>80% 给当轮中奖者</li>
-          <li>10% 回购代币（平台留存）</li>
-          <li>5% 推荐返佣（10 人有推荐则平分，每人 0.5U，一轮合计 5U）</li>
-          <li>4% 进入周度总奖池</li>
-          <li>1% 进入开发者奖池</li>
+          <li>80% to the winner of the round</li>
+          <li>10% for token buyback (platform retained)</li>
+          <li>5% for referral rewards (evenly split among valid referrers of the participants; e.g., if all 10 players have referrers, each referrer gets 0.5U; total 5U)</li>
+          <li>4% goes to the weekly grand prize pool</li>
+          <li>1% goes to the developer pool</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold mb-3">三、奖券与周大奖</h2>
-        <p>每消费满 10U 生成 1 张奖券（向下取整）。系统每周定时从所有未使用的奖券中抽取 1 名，获得周度总奖池全部金额，抽中后该奖券标记为已使用。</p>
+        <h2 class="text-2xl font-bold mb-3">3. Tickets and Weekly Grand Prize</h2>
+        <p>For every 10U spent, you earn 1 ticket (rounded down). Each week, the system draws 1 winner from all unused tickets. The winner receives the entire weekly grand prize pool, and the winning ticket is then marked as used.</p>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold mb-3">四、链上支付与核验</h2>
+        <h2 class="text-2xl font-bold mb-3">4. On-chain Payment and Verification</h2>
         <ul class="list-disc pl-6 space-y-1">
-          <li>用户通过钱包在 Solana 主网完成转账，目标地址为平台项目地址。</li>
-          <li>后端云函数会到链上核验交易哈希，确认的有效入账才会记录到当轮参与名单。</li>
-          <li>记录采用幂等处理：同一交易哈希仅能记录一次，避免重复记入。</li>
-          <li>入账金额按链上 lamports 折算为 SOL，再乘以当前 SOL 美元价格得到 U 金额。</li>
+          <li>Users transfer on Solana mainnet to the platform’s project address using a supported wallet.</li>
+          <li>Backend Cloud Functions verify the transaction hash on-chain. Only confirmed and valid incoming transfers are recorded as round participation.</li>
+          <li>Idempotent recording: the same transaction hash can only be recorded once, preventing duplicates.</li>
+          <li>The incoming lamports are converted to SOL and then multiplied by the current SOL/USD price to derive the U amount.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold mb-3">五、开奖与透明度</h2>
+        <h2 class="text-2xl font-bold mb-3">5. Drawing and Transparency</h2>
         <ul class="list-disc pl-6 space-y-1">
-          <li>每轮满 10 人自动开奖，采用后端随机选择（可在后续版本切换为可验证随机源）。</li>
-          <li>中奖记录与奖池变动均写入 Firestore，可在前端页面实时查看。</li>
+          <li>Each round draws automatically when 10 participants are reached, using backend random selection (can switch to a verifiable randomness source in future versions).</li>
+          <li>Win records and pool changes are written to Firestore and can be viewed in real time on the frontend.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold mb-3">六、推荐返佣</h2>
-        <p>如果参与者绑定了推荐人，则每轮返佣总额 5U 会在当轮有效参与者的推荐人之间均分（示例：10 人均有推荐人，则每位推荐人获得 0.5U）。返佣余额可在后续版本中发起提取。</p>
+        <h2 class="text-2xl font-bold mb-3">6. Referral Rewards</h2>
+        <p>If a participant has a referrer bound, the 5U referral pool is split evenly among the referrers of the valid participants in that round (example: if all 10 participants have referrers, each referrer gets 0.5U). Referral balances can be withdrawn in future versions.</p>
+        <p class="mt-2"><strong>Payout Threshold:</strong> Referral rewards are paid out to a wallet once the accumulated balance reaches <strong>1U</strong>. Any amount under 1U will continue to accumulate until the threshold is met, then it will be automatically paid or withdrawn by request.</p>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold mb-3">七、风险提示</h2>
+        <h2 class="text-2xl font-bold mb-3">7. Risk Disclaimer</h2>
         <ul class="list-disc pl-6 space-y-1">
-          <li>加密资产价格波动较大，请理性参与。</li>
-          <li>请确保使用官方钱包并在主网环境操作，确认转账地址无误。</li>
-          <li>平台不保证任何固定收益，本产品为娱乐性质抽奖应用。</li>
+          <li>Crypto assets are highly volatile. Participate responsibly.</li>
+          <li>Use official wallets and ensure you are operating on mainnet. Always verify the destination address.</li>
+          <li>No guaranteed returns. This is an entertainment-focused lottery application.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold mb-3">八、联系方式</h2>
-        <p>如有问题或建议，可通过站内反馈或开源仓库提交 Issue 与我们联系。</p>
+        <h2 class="text-2xl font-bold mb-3">8. Contact</h2>
+        <p>If you have questions or suggestions, please send in-app feedback or open an issue in the repository.</p>
       </section>
     </div>
   </div>
