@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+    <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>抽奖应用 - 10人开奖</title>
+    <title>Lottery App - 10 Players Draw</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -74,29 +74,29 @@
     </style>
 </head>
 <body class="bg-gray-100 font-meme overflow-x-hidden">
-    <!-- 导航栏 -->
+    <!-- Nav -->
     <nav class="sticky top-0 z-50 bg-memeYellow border-b-4 border-black shadow-lg">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-2">
                 <div class="text-4xl animate-pulse-fast">🎯</div>
-                <h1 class="text-2xl md:text-3xl font-bold text-shadow">抽奖应用 <span class="text-memePink">LOTTERY</span></h1>
+                <h1 class="text-2xl md:text-3xl font-bold text-shadow">Lottery App <span class="text-memePink">LOTTERY</span></h1>
             </div>
             
             <div class="hidden md:flex items-center space-x-6">
-                <a href="#" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">首页</a>
-                <a href="#how-it-works" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">玩法说明</a>
-                <a href="#leaderboard" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">排行榜</a>
-                <button id="open-history" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">历史记录</button>
+                <a href="#" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">Home</a>
+                <a href="#how-it-works" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">How It Works</a>
+                <a href="#leaderboard" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">Leaderboard</a>
+                <button id="open-history" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">History</button>
             </div>
             
             <div class="flex items-center space-x-3">
-                <!-- SOL价格显示 -->
+                <!-- SOL price -->
                 <div class="bg-white px-3 py-1 rounded-lg border-2 border-black shadow-md">
-                    <span class="text-sm font-bold text-gray-600">SOL价格: </span>
+                    <span class="text-sm font-bold text-gray-600">SOL Price: </span>
                     <span id="sol-price" class="text-sm font-bold text-memeBlue">$0.00</span>
                 </div>
                 <button id="wallet-connect" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-md">
-                    <i class="fa fa-wallet mr-2"></i> 连接钱包
+                    <i class="fa fa-wallet mr-2"></i> Connect Wallet
                 </button>
                 <div id="wallet-info" class="hidden">
                     <span id="wallet-address" class="text-sm text-gray-600 mr-2"></span>
@@ -105,10 +105,10 @@
                     </button>
                 </div>
                 <div id="userInfo" class="hidden">
-                    <!-- 用户信息将在这里显示 -->
+                    <!-- User info will be displayed here -->
                 </div>
                 <div id="myTickets" class="hidden">
-                    <!-- 我的奖券信息将在这里显示 -->
+                    <!-- My tickets will be displayed here -->
                 </div>
                 <button class="md:hidden text-2xl">
                     <i class="fa fa-bars"></i>
@@ -117,7 +117,7 @@
         </div>
     </nav>
 
-    <!-- 英雄区域 -->
+    <!-- Hero -->
     <header class="relative bg-gradient-to-br from-memePurple via-purple-700 to-memeBlue clip-path-slant pt-16 md:pt-24 pb-32 md:pb-40 overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-full opacity-10">
             <div class="absolute top-10 left-10 text-9xl">🚀</div>
@@ -128,19 +128,11 @@
         
         <div class="container mx-auto px-4 relative z-10">
             <div class="max-w-3xl mx-auto text-center">
-                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white text-shadow-lg animate-float">
-                    10人开奖 <span class="text-memeYellow">赢大奖</span>!
-                </h1>
-                <p class="text-xl md:text-2xl text-white mb-8 text-shadow">
-                    满10人自动开奖！80%中奖 + 10%回购 + 5%返佣 + 4%总奖池 + 1%开发者！
-                </p>
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white text-shadow-lg animate-float">10 Players Draw <span class="text-memeYellow">Win Big</span>!</h1>
+                <p class="text-xl md:text-2xl text-white mb-8 text-shadow">Auto-draw at 10 participants! 80% winner + 10% buyback + 5% referrals + 4% grand prize + 1% developers!</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <button id="buy-tickets-btn" class="bg-memeYellow hover:bg-yellow-400 text-black font-bold py-3 px-8 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-xl text-lg">
-                        <i class="fa fa-ticket mr-2"></i> 购买奖券
-                    </button>
-                    <button id="open-rules" class="bg-white hover:bg-gray-200 text-memePurple font-bold py-3 px-8 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-xl text-lg">
-                        <i class="fa fa-info-circle mr-2"></i> 玩法说明
-                    </button>
+                    <button id="buy-tickets-btn" class="bg-memeYellow hover:bg-yellow-400 text-black font-bold py-3 px-8 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-xl text-lg"><i class="fa fa-ticket mr-2"></i> Buy Tickets</button>
+                    <button id="open-rules" class="bg-white hover:bg-gray-200 text-memePurple font-bold py-3 px-8 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-xl text-lg"><i class="fa fa-info-circle mr-2"></i> How It Works</button>
                 </div>
             </div>
         </div>
@@ -153,26 +145,26 @@
         </div>
     </header>
 
-    <!-- 玩法说明弹窗 -->
+    <!-- Rules modal -->
     <div id="rules-modal" class="fixed inset-0 bg-black/50 z-[100] hidden">
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-4xl h-[80vh] rounded-2xl border-4 border-black shadow-2xl overflow-hidden flex flex-col">
                 <div class="flex items-center justify-between px-4 py-3 border-b-4 border-black bg-memeYellow">
-                    <h3 class="text-xl font-extrabold">玩法说明</h3>
-                    <button id="close-rules" class="bg-black text-white font-bold px-3 py-1 rounded-lg border-2 border-black">关闭</button>
+                    <h3 class="text-xl font-extrabold">How It Works</h3>
+                    <button id="close-rules" class="bg-black text-white font-bold px-3 py-1 rounded-lg border-2 border-black">Close</button>
                 </div>
                 <iframe src="rules.html" class="w-full flex-1"></iframe>
             </div>
         </div>
     </div>
 
-    <!-- 历史记录弹窗 -->
+    <!-- History modal -->
     <div id="history-modal" class="fixed inset-0 bg-black/50 z-[100] hidden">
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-6xl h-[90vh] rounded-2xl border-4 border-black shadow-2xl overflow-hidden flex flex-col">
                 <div class="flex items-center justify-between px-6 py-4 border-b-4 border-black bg-memeYellow">
-                    <h3 class="text-xl font-extrabold">抽奖历史记录</h3>
-                    <button id="close-history" class="bg-black text-white font-bold px-4 py-2 rounded-lg border-2 border-black">关闭</button>
+                    <h3 class="text-xl font-extrabold">Lottery History</h3>
+                    <button id="close-history" class="bg-black text-white font-bold px-4 py-2 rounded-lg border-2 border-black">Close</button>
                 </div>
                 <div class="flex-1">
                     <iframe src="history.html" class="w-full h-full border-0"></iframe>
@@ -181,162 +173,162 @@
         </div>
     </div>
 
-    <!-- 开奖结果弹窗 -->
+    <!-- Draw result modal -->
     <div id="draw-result-modal" class="fixed inset-0 bg-black/50 z-[100] hidden">
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl border-4 border-black shadow-2xl overflow-hidden flex flex-col">
                 <div class="flex items-center justify-between px-6 py-4 border-b-4 border-black bg-memeYellow">
-                    <h3 class="text-xl font-extrabold">🎉 开奖结果</h3>
-                    <button id="close-draw-result" class="bg-black text-white font-bold px-4 py-2 rounded-lg border-2 border-black">关闭</button>
+                    <h3 class="text-xl font-extrabold">🎉 Draw Result</h3>
+                    <button id="close-draw-result" class="bg-black text-white font-bold px-4 py-2 rounded-lg border-2 border-black">Close</button>
                 </div>
-                <div id="draw-result-content" class="p-6 overflow-y-auto flex-1">
-                    <!-- 开奖结果内容将通过脚本注入 -->
+                 <div id="draw-result-content" class="p-6 overflow-y-auto flex-1">
+                    <!-- Draw result content injected by JS -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 当前奖池状态 -->
+    <!-- Current round -->
     <section class="pt-20 pb-16 bg-white">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">当前 <span class="text-memePink">轮次</span></h2>
-                <p class="text-xl text-gray-600">还差 <span id="remaining-count" class="font-bold text-memeBlue">10</span> 人开奖！</p>
+                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">Current <span class="text-memePink">Round</span></h2>
+                <p class="text-xl text-gray-600"><span id="remaining-count" class="font-bold text-memeBlue">10</span> people to draw!</p>
             </div>
             
             <div class="max-w-4xl mx-auto">
-                <!-- 进度条 -->
+                <!-- Progress bar -->
                 <div class="relative mb-12 md:mb-14">
                     <div class="bg-gray-200 rounded-full h-12 border-4 border-black overflow-hidden">
                         <div id="progress-bar" class="bg-gradient-to-r from-memeGreen to-memeBlue h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                     </div>
                     <div id="progress-label" class="absolute top-1/2 left-[50%] -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
                         <div class="bg-memeYellow text-black font-bold px-4 py-1 rounded-full border-2 border-black shadow-md transform rotate-[-5deg]">
-                            <span id="participant-count">0</span>/10 人
+                            <span id="participant-count">0</span>/10 people
                         </div>
                     </div>
                 </div>
                 
-                <!-- 详细统计 -->
+                <!-- Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                     <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
                         <div class="text-2xl font-bold text-memeBlue" id="total-amount">0</div>
-                        <div class="text-sm text-gray-600">总金额 (U)</div>
+                        <div class="text-sm text-gray-600">Total (U)</div>
                     </div>
                     <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
                         <div class="text-2xl font-bold text-memeGreen" id="avg-amount">0</div>
-                        <div class="text-sm text-gray-600">平均金额 (U)</div>
+                        <div class="text-sm text-gray-600">Average (U)</div>
                     </div>
                     <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
                         <div class="text-2xl font-bold text-memePurple" id="max-amount">0</div>
-                        <div class="text-sm text-gray-600">最高金额 (U)</div>
+                        <div class="text-sm text-gray-600">Max (U)</div>
                     </div>
                     <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
                         <div class="text-2xl font-bold text-memePink" id="min-amount">0</div>
-                        <div class="text-sm text-gray-600">最低金额 (U)</div>
+                        <div class="text-sm text-gray-600">Min (U)</div>
                     </div>
                 </div>
                 
-                <!-- 奖池卡片 -->
+                <!-- Pools -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="bg-gradient-to-br from-yellow-100 to-memeYellow p-6 rounded-2xl border-meme shadow-xl transform rotate-random hover:scale-105 transition-all">
-                        <h3 class="text-2xl font-bold mb-4 text-black">当前奖池</h3>
+                        <h3 class="text-2xl font-bold mb-4 text-black">Current Pool</h3>
                         <div class="flex items-end gap-2">
                             <span id="current-pool" class="text-5xl font-bold text-black">0</span>
                             <span class="text-2xl font-bold text-gray-700 mb-1">U</span>
                         </div>
                         <div class="mt-4 text-lg">
-                            <p><i class="fa fa-user mr-2"></i> <span id="current-participants">0</span> 参与者</p>
-                            <p><i class="fa fa-clock-o mr-2"></i> <span id="pool-status">等待中...</span></p>
+                            <p><i class="fa fa-user mr-2"></i> <span id="current-participants">0</span> Participants</p>
+                            <p><i class="fa fa-clock-o mr-2"></i> <span id="pool-status">Waiting...</span></p>
                         </div>
                     </div>
                     
                     <div class="bg-gradient-to-br from-blue-100 to-memeBlue p-6 rounded-2xl border-meme shadow-xl transform rotate-random hover:scale-105 transition-all" style="--rotation: 2deg">
-                        <h3 class="text-2xl font-bold mb-4 text-white">总奖池</h3>
+                        <h3 class="text-2xl font-bold mb-4 text-white">Grand Prize Pool</h3>
                         <div class="flex items-end gap-2">
                             <span id="grand-prize" class="text-5xl font-bold text-white">0</span>
                             <span class="text-2xl font-bold text-blue-100 mb-1">U</span>
                         </div>
                         <div class="mt-4 text-lg text-white">
-                            <p><i class="fa fa-ticket mr-2"></i> <span id="total-tickets">0</span> 总奖券</p>
-                            <p><i class="fa fa-calendar mr-2"></i> 下次开奖: <span id="next-draw">周日</span></p>
+                            <p><i class="fa fa-ticket mr-2"></i> <span id="total-tickets">0</span> Total Tickets</p>
+                            <p><i class="fa fa-calendar mr-2"></i> Next Draw: <span id="next-draw">Sunday</span></p>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 参与者列表 -->
+                <!-- Participants list -->
                 <div class="mt-8 bg-white rounded-2xl border-4 border-black p-6 shadow-xl">
-                    <h3 class="text-2xl font-bold mb-4 text-center">当前参与者</h3>
-                    <div id="participants-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                        <!-- 参与者卡片将在这里动态生成 -->
+                    <h3 class="text-2xl font-bold mb-4 text-center">Current Participants</h3>
+                     <div id="participants-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        <!-- Participant cards injected by JS -->
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 参与选项 -->
+    <!-- Tiers -->
     <section class="py-16 bg-gray-100">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">选择 <span class="text-memeGreen">档位</span></h2>
-                <p class="text-xl text-gray-600">选择投资档位（每10U获得1张奖券）</p>
+                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">Choose <span class="text-memeGreen">Tier</span></h2>
+                <p class="text-xl text-gray-600">Choose your tier (1 ticket per 10U)</p>
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 max-w-5xl mx-auto">
-                <!-- 选项卡片 -->
+                <!-- Tier cards -->
                 <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
                     <div class="text-4xl mb-4">🥉</div>
                     <h3 class="text-2xl font-bold mb-2">1U</h3>
-                    <p class="text-gray-600 mb-4">0.1 奖券</p>
+                    <p class="text-gray-600 mb-4">0.1 Ticket</p>
                     <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="1">
-                        立即购买
+                        Buy Now
                     </button>
                 </div>
                 
                 <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
                     <div class="text-4xl mb-4">🥈</div>
                     <h3 class="text-2xl font-bold mb-2">2U</h3>
-                    <p class="text-gray-600 mb-4">0.2 奖券</p>
+                    <p class="text-gray-600 mb-4">0.2 Ticket</p>
                     <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="2">
-                        立即购买
+                        Buy Now
                     </button>
                 </div>
                 
                 <div class="bg-memeYellow rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake relative">
                     <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-memePink text-white font-bold px-3 py-1 rounded-full border-2 border-black transform rotate-[-10deg]">
-                        热门
+                        Hot
                     </div>
                     <div class="text-4xl mb-4">🏆</div>
                     <h3 class="text-2xl font-bold mb-2">10U</h3>
-                    <p class="text-gray-800 mb-4">1 奖券</p>
+                    <p class="text-gray-800 mb-4">1 Ticket</p>
                     <button class="buy-ticket-btn w-full bg-black text-white hover:bg-gray-800 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="10">
-                        立即购买
+                        Buy Now
                     </button>
                 </div>
                 
                 <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
                     <div class="text-4xl mb-4">💎</div>
                     <h3 class="text-2xl font-bold mb-2">50U</h3>
-                    <p class="text-gray-600 mb-4">5 奖券</p>
+                    <p class="text-gray-600 mb-4">5 Tickets</p>
                     <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="50">
-                        立即购买
+                        Buy Now
                     </button>
                 </div>
                 
                 <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
                     <div class="text-4xl mb-4">🚀</div>
                     <h3 class="text-2xl font-bold mb-2">100U</h3>
-                    <p class="text-gray-600 mb-4">10 奖券</p>
+                    <p class="text-gray-600 mb-4">10 Tickets</p>
                     <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="100">
-                        立即购买
+                        Buy Now
                     </button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 如何工作 -->
+    <!-- How it works -->
     <section id="how-it-works" class="py-16 bg-white relative overflow-hidden">
         <div class="absolute -right-20 -top-20 text-9xl opacity-10">🤔</div>
         <div class="absolute -left-10 bottom-10 text-8xl opacity-10">📝</div>
@@ -373,7 +365,7 @@
                 </div>
             </div>
             
-            <!-- 分配说明 -->
+            <!-- Distribution -->
             <div class="mt-16 max-w-3xl mx-auto bg-gray-100 p-8 rounded-2xl border-meme shadow-lg">
                 <h3 class="text-2xl font-bold mb-6 text-center">PRIZE DISTRIBUTION (10u example)</h3>
                 
@@ -422,7 +414,7 @@
         </div>
     </section>
 
-    <!-- 最近赢家 -->
+    <!-- Recent Winners -->
     <section id="prizes" class="py-16 bg-gradient-to-br from-gray-900 to-memeBlack text-white">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
@@ -431,7 +423,7 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                <!-- 赢家卡片 -->
+                <!-- Winner cards -->
                 <div class="bg-gray-800 rounded-xl border-2 border-white p-6 transform hover:scale-105 transition-all">
                     <div class="flex justify-between items-start mb-4">
                         <div>
@@ -486,7 +478,7 @@
         </div>
     </section>
 
-    <!-- 推荐计划 -->
+    <!-- Referral program -->
     <section class="py-16 bg-white">
         <div class="container mx-auto px-4">
             <div class="max-w-4xl mx-auto bg-gradient-to-r from-memePink to-purple-600 rounded-3xl p-8 md:p-12 border-meme shadow-2xl relative overflow-hidden">
@@ -498,16 +490,16 @@
                     
                     <div class="bg-white p-6 rounded-xl border-2 border-black mb-6">
                         <div class="flex flex-col md:flex-row gap-4">
-                            <input id="referral-link-input" type="text" value="" placeholder="连接钱包后生成邀请链接" class="flex-1 font-meme p-3 border-2 border-gray-300 rounded-lg" readonly>
+                            <input id="referral-link-input" type="text" value="" placeholder="Connect wallet to generate invite link" class="flex-1 font-meme p-3 border-2 border-gray-300 rounded-lg" readonly>
                             <button id="copy-referral-link-btn" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg border-2 border-black transform hover:scale-105 transition-all whitespace-nowrap">
                                 Copy Link
                             </button>
                         </div>
                         <div class="mt-4 flex items-center justify-between">
-                            <div class="text-white">我的返佣余额</div>
+                            <div class="text-white">My Referral Balance</div>
                             <div id="referral-balance" class="text-2xl font-extrabold text-memeYellow">0</div>
                         </div>
-                        <p class="mt-2 text-white/90 text-sm">返佣将累计到余额，当累计达到 <strong>1U</strong> 时自动发放或可发起提现。</p>
+                         <p class="mt-2 text-white/90 text-sm">Rewards accumulate to your balance. Once you reach <strong>1U</strong>, they are auto-paid or can be withdrawn.</p>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -526,7 +518,7 @@
         </div>
     </section>
 
-    <!-- 每周大奖 -->
+    <!-- Weekly mega draw -->
     <section class="py-16 bg-gray-100">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
@@ -569,7 +561,7 @@
         </div>
     </section>
 
-    <!-- 页脚 -->
+    <!-- Footer -->
     <footer class="bg-memeBlack text-white py-12">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
@@ -608,9 +600,7 @@
                         <a href="#" class="text-2xl hover:text-memePink transition-colors"><i class="fa fa-discord"></i></a>
                         <a href="#" class="text-2xl hover:text-memePink transition-colors"><i class="fa fa-reddit"></i></a>
                     </div>
-                    <button id="footer-wallet-connect" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-white transform hover:scale-105 transition-all">
-                        <i class="fa fa-wallet mr-2"></i> 连接钱包
-                    </button>
+                    <button id="footer-wallet-connect" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-white transform hover:scale-105 transition-all"><i class="fa fa-wallet mr-2"></i> Connect Wallet</button>
                 </div>
             </div>
             
@@ -620,7 +610,7 @@
         </div>
     </footer>
 
-    <!-- 通知区域 -->
+    <!-- Notification area -->
     <div id="notification" class="fixed top-4 right-4 z-50 hidden">
         <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm border-2 border-black">
             <div class="flex items-center">
@@ -632,21 +622,21 @@
         </div>
     </div>
 
-    <!-- 加载遮罩 -->
+    <!-- Loading overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg p-6 border-2 border-black">
             <div class="flex items-center">
                 <div class="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mr-3"></div>
-                <span id="loading-text">处理中...</span>
+                <span id="loading-text">Processing...</span>
             </div>
         </div>
     </div>
 
-    <!-- 模态框 (默认隐藏) -->
+    <!-- Wallet modal (hidden by default) -->
     <div id="wallet-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-2xl border-4 border-black p-8 max-w-md w-full mx-4 transform transition-all">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold">连接钱包</h3>
+                <h3 class="text-2xl font-bold">Connect Wallet</h3>
                 <button id="close-modal" class="text-2xl">&times;</button>
             </div>
             
@@ -670,7 +660,7 @@
     </div>
 
     <script>
-        // Firebase 配置
+        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyA5Z5ieEbAcfQX0kxGSn9ldGXhzvAwx_8M",
             authDomain: "chat-294cc.firebaseapp.com",
@@ -682,21 +672,21 @@
             measurementId: "G-SJR9NDW86B"
         };
 
-        // 初始化 Firebase
+        // Init Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         
-        // 启用匿名认证以解决权限问题
+        // Enable anonymous auth to avoid permission issues
         auth.signInAnonymously()
             .then(() => {
-                console.log('匿名认证成功');
+                console.log('Anonymous auth success');
             })
             .catch((error) => {
-                console.error('匿名认证失败:', error);
+                console.error('Anonymous auth failed:', error);
             });
 
-        // 确保写入前已完成认证
+        // Ensure auth before writing
         async function ensureAuth() {
             if (auth.currentUser) return auth.currentUser;
             return await new Promise(async (resolve) => {
@@ -710,47 +700,47 @@
             });
         }
 
-        // Solana 连接 - 使用更可靠的 RPC 端点
+        // Solana connection - reliable RPC endpoint
         const connection = new solanaWeb3.Connection('https://small-holy-forest.solana-mainnet.quiknode.pro/b59315ea187b3de1b3542c5c25d7f2d5b5410ff4/');
         let wallet = null;
         let currentUser = null;
         let currentRound = null;
-        let currentSolPrice = 1; // 默认 SOL 价格，将在初始化时更新
-        let referralReferrer = null; // 当前访问来源推荐人地址
+        let currentSolPrice = 1; // default SOL price, will be updated on init
+        let referralReferrer = null; // referrer from URL
 
-        // 获取 SOL 价格
+        // Fetch SOL price
         async function fetchSolPrice() {
             try {
                 const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
                 const data = await response.json();
                 if (data.solana && data.solana.usd) {
                     currentSolPrice = data.solana.usd;
-                    console.log('当前 SOL 价格:', currentSolPrice, 'USD');
+                    console.log('Current SOL price:', currentSolPrice, 'USD');
                     updateSolPriceDisplay();
                     return currentSolPrice;
                 } else {
-                    console.warn('无法获取 SOL 价格，使用默认价格 1 USD');
+                    console.warn('Failed to fetch SOL price, using default 1 USD');
                     currentSolPrice = 1;
                     updateSolPriceDisplay();
                     return 1;
                 }
             } catch (error) {
-                console.error('获取 SOL 价格失败:', error);
+                console.error('Failed to fetch SOL price:', error);
                 currentSolPrice = 1;
                 updateSolPriceDisplay();
                 return 1;
             }
         }
 
-        // 更新 SOL 价格显示
+        // Update SOL price display
         function updateSolPriceDisplay() {
             const solPriceElement = document.getElementById('sol-price');
             if (solPriceElement) {
                 solPriceElement.textContent = `$${currentSolPrice.toFixed(2)}`;
-                // 如果价格获取失败，显示警告样式
+                // If price fetch failed, show warning style
                 if (currentSolPrice === 1) {
                     solPriceElement.classList.add('text-red-500');
-                    solPriceElement.title = '价格获取失败，使用默认价格';
+                    solPriceElement.title = 'Failed to fetch price, using default';
                 } else {
                     solPriceElement.classList.remove('text-red-500');
                     solPriceElement.title = '';
@@ -758,12 +748,12 @@
             }
         }
 
-        // 将 U 金额转换为 SOL lamports
+        // Convert U to lamports
         function convertUToLamports(uAmount) {
             return Math.floor(uAmount * solanaWeb3.LAMPORTS_PER_SOL / currentSolPrice);
         }
 
-        // DOM 元素
+        // DOM elements
         const connectWalletBtn = document.getElementById('wallet-connect');
         const walletInfo = document.getElementById('wallet-info');
         const walletAddress = document.getElementById('wallet-address');
@@ -788,7 +778,7 @@
         const referralPeopleEl = document.getElementById('referral-people');
         const referralEarningsEl = document.getElementById('referral-earnings');
 
-        // 工具函数
+        // Utils
         function showNotification(message, type = 'info') {
             notificationMessage.textContent = message;
             notificationIcon.innerHTML = type === 'success' ? 
@@ -802,11 +792,11 @@
             }, 3000);
         }
 
-        // 轮次监听取消器与已展示标记，避免重复弹窗
+        // Round listener flags to avoid duplicate modals
         let activeRoundUnsubscribe = null;
         let lastResultShownRoundId = null;
 
-        function showLoading(text = '处理中...') {
+        function showLoading(text = 'Processing...') {
             loadingText.textContent = text;
             loadingOverlay.classList.remove('hidden');
         }
@@ -822,7 +812,7 @@
                 connectWalletBtn.classList.add('hidden');
                 walletInfo.classList.remove('hidden');
                 buyTicketsBtn.classList.remove('hidden');
-                // 生成邀请链接
+                // Generate referral link
                 if (referralLinkInput) {
                     const url = new URL(window.location.href);
                     url.searchParams.set('ref', address);
@@ -844,7 +834,7 @@
                 const status = round.status || 'active';
                 const remaining = Math.max(0, 10 - participantCount);
 
-                // 基础信息
+                // Basics
                 const participantCountElement = document.getElementById('participant-count');
                 const remainingCountElement = document.getElementById('remaining-count');
                 const currentPoolElement = document.getElementById('current-pool');
@@ -857,18 +847,18 @@
                 if (remainingCountElement) remainingCountElement.textContent = remaining;
                 if (currentPoolElement) currentPoolElement.textContent = totalAmount;
                 if (currentParticipantsElement) currentParticipantsElement.textContent = participantCount;
-                if (poolStatusElement) poolStatusElement.textContent = status === 'active' ? '进行中...' : '已结束';
+                if (poolStatusElement) poolStatusElement.textContent = status === 'active' ? 'In progress...' : 'Ended';
 
-                // 进度条（基于人数）
+                // Progress bar (by count)
                 const progress = Math.min(participantCount * 10, 100);
                 if (progressBarElement) progressBarElement.style.width = `${progress}%`;
                 
-                // 更新进度标签位置
+                // Update progress label position
                 if (progressLabelElement && progress > 0) {
                     progressLabelElement.style.left = `${Math.min(progress, 90)}%`;
                 }
 
-                // 详细统计信息
+                // Detailed stats
                 const totalAmountElement = document.getElementById('total-amount');
                 const avgAmountElement = document.getElementById('avg-amount');
                 const maxAmountElement = document.getElementById('max-amount');
@@ -891,27 +881,27 @@
                     if (minAmountElement) minAmountElement.textContent = '0';
                 }
 
-                // 更新参与者列表
+                // Update participants list
                 updateParticipantsList(participants);
             }
         }
 
-        // 更新参与者列表
+        // Update participants list
         function updateParticipantsList(participants) {
             const participantsList = document.getElementById('participants-list');
             
             if (participants.length === 0) {
-                participantsList.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">暂无参与者</div>';
+                participantsList.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No participants</div>';
                 return;
             }
 
             const participantsHTML = participants.map((participant, index) => {
                 const walletAddress = participant.walletAddress || '';
-                const shortAddress = walletAddress ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}` : '未知';
+                const shortAddress = walletAddress ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}` : 'Unknown';
                 const amount = participant.amount || 0;
                 const timestamp = participant.timestamp ? new Date(participant.timestamp.toDate()).toLocaleTimeString() : '';
                 
-                // 根据金额选择不同的图标和颜色
+                // Icon/color by amount
                 let icon = '👤';
                 let bgColor = 'bg-gray-100';
                 let textColor = 'text-gray-800';
@@ -951,7 +941,7 @@
             participantsList.innerHTML = participantsHTML;
         }
 
-        // 显示开奖结果弹窗（复用历史记录详情样式）
+        // Show draw result modal (reuse history detail style)
         function showDrawResult(round) {
             if (!round) return;
             const winner = round.winner;
@@ -959,12 +949,12 @@
 
             const winnerBlock = winner ? `
                 <div class="bg-memeYellow p-4 rounded-lg border-2 border-black mb-4">
-                    <h4 class="font-bold text-lg mb-2">🏆 中奖者</h4>
+                    <h4 class="font-bold text-lg mb-2">🏆 Winner</h4>
                     <div class="space-y-1 text-sm">
-                        <div><strong>钱包地址:</strong> ${winner.walletAddress || '-'}</div>
-                        <div><strong>用户ID:</strong> ${winner.userId || '-'}</div>
-                        <div><strong>参与金额:</strong> ${winner.amount || 0}U</div>
-                        <div><strong>参与时间:</strong> ${winner.timestamp ? new Date(winner.timestamp.toDate()).toLocaleString() : '未知'}</div>
+                        <div><strong>Wallet:</strong> ${winner.walletAddress || '-'}</div>
+                        <div><strong>User ID:</strong> ${winner.userId || '-'}</div>
+                        <div><strong>Amount:</strong> ${winner.amount || 0}U</div>
+                        <div><strong>Time:</strong> ${winner.timestamp ? new Date(winner.timestamp.toDate()).toLocaleString() : 'Unknown'}</div>
                     </div>
                 </div>
             ` : '';
@@ -975,34 +965,34 @@
                         <span class="text-sm font-bold">#${idx + 1}</span>
                         <div>
                             <div class="text-sm font-medium">${p.walletAddress || '-'}</div>
-                            <div class="text-xs text-gray-500">${p.timestamp ? new Date(p.timestamp.toDate()).toLocaleString() : '未知'}</div>
+                            <div class="text-xs text-gray-500">${p.timestamp ? new Date(p.timestamp.toDate()).toLocaleString() : 'Unknown'}</div>
                         </div>
                     </div>
                     <div class="text-right">
                         <div class="text-sm font-bold">${p.amount || 0}U</div>
-                        ${winner && p.walletAddress === winner.walletAddress ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">🏆 中奖</span>' : ''}
+                        ${winner && p.walletAddress === winner.walletAddress ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">🏆 Winner</span>' : ''}
                     </div>
                 </div>
-            `).join('') : '<p class="text-gray-500">暂无参与者</p>';
+            `).join('') : '<p class="text-gray-500">No participants</p>';
 
             drawResultContent.innerHTML = `
                 <div class="space-y-6">
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-bold text-lg mb-2">轮次信息</h4>
+                        <h4 class="font-bold text-lg mb-2">Round Info</h4>
                         <div class="grid grid-cols-2 gap-4 text-sm">
-                            <div><strong>轮次ID:</strong> ${round.id}</div>
-                            <div><strong>状态:</strong> 已完成</div>
-                            <div><strong>总金额:</strong> ${round.totalAmount || 0}U</div>
-                            <div><strong>中奖金额:</strong> ${round.prizeAmount || 0}U</div>
-                            <div><strong>回购金额:</strong> ${round.buybackAmount || 0}U</div>
-                            <div><strong>推荐返佣:</strong> ${round.referralAmount || 0}U</div>
-                            <div><strong>总奖池:</strong> ${round.grandPrizeAmount || 0}U</div>
-                            <div><strong>开发者:</strong> ${round.developerAmount || 0}U</div>
+                            <div><strong>Round ID:</strong> ${round.id}</div>
+                            <div><strong>Status:</strong> Completed</div>
+                            <div><strong>Total:</strong> ${round.totalAmount || 0}U</div>
+                            <div><strong>Prize:</strong> ${round.prizeAmount || 0}U</div>
+                            <div><strong>Buyback:</strong> ${round.buybackAmount || 0}U</div>
+                            <div><strong>Referrals:</strong> ${round.referralAmount || 0}U</div>
+                            <div><strong>Grand Prize:</strong> ${round.grandPrizeAmount || 0}U</div>
+                            <div><strong>Developers:</strong> ${round.developerAmount || 0}U</div>
                         </div>
                     </div>
                     ${winnerBlock}
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-bold text-lg mb-2">参与者列表（${participants.length}人）</h4>
+                        <h4 class="font-bold text-lg mb-2">Participants (${participants.length})</h4>
                         <div class="max-h-60 overflow-y-auto">
                             ${participantsList}
                         </div>
@@ -1013,7 +1003,7 @@
             drawResultModal.classList.remove('hidden');
         }
 
-        // 监听当前活动轮次的状态变化（当变为 completed 且有 winner 时弹窗）
+        // Listen to current active round changes (show modal on first completed with winner)
         function attachRoundListener(roundId) {
             if (!roundId) return;
             try { if (typeof activeRoundUnsubscribe === 'function') activeRoundUnsubscribe(); } catch (_) {}
@@ -1021,7 +1011,7 @@
             activeRoundUnsubscribe = db.collection('rounds').doc(roundId).onSnapshot((doc) => {
                 if (!doc.exists) return;
                 const data = doc.data();
-                // 仅当本轮首次完成时展示
+                // Show only the first time the round completes
                 if (data && data.status === 'completed' && data.winner && lastResultShownRoundId !== doc.id) {
                     lastResultShownRoundId = doc.id;
                     showDrawResult({ id: doc.id, ...data });
@@ -1035,31 +1025,31 @@
                 if (currentUser) {
                     userInfo.innerHTML = `
                         <div>
-                            <span class="text-gray-600">钱包地址:</span>
+                            <span class="text-gray-600">Wallet:</span>
                             <p class="text-sm font-mono break-all">${currentUser.walletAddress}</p>
                         </div>
                         <div>
-                            <span class="text-gray-600">我的奖券:</span>
-                            <p class="font-semibold">${currentUser.ticketCount || 0} 张</p>
+                            <span class="text-gray-600">My Tickets:</span>
+                            <p class="font-semibold">${currentUser.ticketCount || 0}</p>
                         </div>
                     `;
                 } else {
-                    userInfo.innerHTML = '<p class="text-gray-500">未连接钱包</p>';
+                    userInfo.innerHTML = '<p class="text-gray-500">Wallet not connected</p>';
                 }
             }
         }
 
-        // 钱包连接
+        // Wallet connect
         async function connectWallet(walletType = 'phantom') {
             try {
-                showLoading('连接钱包中...');
+                showLoading('Connecting wallet...');
                 
                 let walletProvider;
                 
                 switch(walletType) {
                     case 'phantom':
                         if (!window.solana || !window.solana.isPhantom) {
-                            showNotification('请先安装 Phantom 钱包', 'error');
+                            showNotification('Please install Phantom wallet first', 'error');
                             hideLoading();
                             return;
                         }
@@ -1067,7 +1057,7 @@
                         break;
                     case 'solflare':
                         if (!window.solflare) {
-                            showNotification('请先安装 Solflare 钱包', 'error');
+                            showNotification('Please install Solflare wallet first', 'error');
                             hideLoading();
                             return;
                         }
@@ -1075,35 +1065,35 @@
                         break;
                     case 'coinbase':
                         if (!window.coinbaseSolana) {
-                            showNotification('请先安装 Coinbase 钱包', 'error');
+                            showNotification('Please install Coinbase wallet first', 'error');
                             hideLoading();
                             return;
                         }
                         walletProvider = window.coinbaseSolana;
                         break;
                     default:
-                        showNotification('不支持的钱包类型', 'error');
+                        showNotification('Unsupported wallet type', 'error');
                         hideLoading();
                         return;
                 }
 
-                // 连接钱包
+                // Connect
                 const response = await walletProvider.connect();
                 wallet = walletProvider;
                 
-                // 确保匿名认证已就绪
+                // Ensure anonymous auth is ready
                 await ensureAuth();
 
-                // 使用钱包地址作为用户ID
+                // Use wallet address as user ID
                 const walletAddress = response.publicKey.toString();
                 
-                // 创建或获取用户信息（不依赖Firebase Auth）
+                // Create or get user (not relying on Firebase Auth)
                 currentUser = {
                     uid: walletAddress,
                     walletAddress: walletAddress
                 };
 
-                // 尝试创建用户记录（如果失败也不会阻止连接）
+                // Try to create user record (non-blocking on failure)
                 try {
                     const userRef = db.collection('users').doc(walletAddress);
                     await userRef.set({
@@ -1112,7 +1102,7 @@
                         referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
                     }, { merge: true });
                 } catch (firebaseError) {
-                    console.warn('无法创建用户记录，但钱包连接成功:', firebaseError);
+                    console.warn('Unable to create user record, but wallet connected:', firebaseError);
                 }
 
                 updateWalletUI();
@@ -1120,18 +1110,18 @@
                 loadCurrentRound();
                 loadUserTickets();
                 loadPoolInfo();
-                showNotification('钱包连接成功！', 'success');
+                showNotification('Wallet connected!', 'success');
                 walletModal.classList.add('hidden');
                 
             } catch (error) {
-                console.error('连接钱包失败:', error);
-                showNotification('连接钱包失败，请重试', 'error');
+                console.error('Failed to connect wallet:', error);
+                showNotification('Failed to connect wallet, please retry', 'error');
             } finally {
                 hideLoading();
             }
         }
 
-        // 断开钱包连接
+        // Disconnect wallet
         function disconnectWallet() {
             if (wallet) {
                 wallet.disconnect();
@@ -1139,11 +1129,11 @@
                 currentUser = null;
                 updateWalletUI();
                 updateUserInfo();
-                showNotification('钱包已断开连接', 'info');
+                showNotification('Wallet disconnected', 'info');
             }
         }
 
-        // 加载当前轮次
+        // Load current round
         async function loadCurrentRound() {
             try {
                 const roundsQuery = db.collection('rounds')
@@ -1160,7 +1150,7 @@
                         ...round.data()
                     };
                 } else {
-                    // 无权限创建轮次时，仅本地占位，不进行写入
+                    // If no permission to create, keep local placeholder only
                     currentRound = {
                         id: null,
                         status: 'active',
@@ -1173,12 +1163,12 @@
                 updateRoundInfo(currentRound);
                 
             } catch (error) {
-                console.error('加载轮次失败:', error);
-                showNotification('加载轮次失败', 'error');
+                console.error('Failed to load round:', error);
+                showNotification('Failed to load round', 'error');
             }
         }
 
-        // 加载用户奖券
+        // Load user tickets
         async function loadUserTickets() {
             if (!currentUser) return;
             
@@ -1205,22 +1195,22 @@
                                         ${new Date(ticket.createdAt.toDate()).toLocaleDateString()}
                                     </div>
                                 </div>
-                                <div class="text-sm text-gray-500">
-                                    ${ticket.status || '待开奖'}
-                                </div>
+                                    <div class="text-sm text-gray-500">
+                                        ${ticket.status || 'Pending draw'}
+                                    </div>
                             </div>
                         `).join('');
                     } else {
-                        myTickets.innerHTML = '<p class="text-gray-500">暂无奖券</p>';
+                        myTickets.innerHTML = '<p class="text-gray-500">No tickets</p>';
                     }
                 }
                 
-                // 更新用户信息中的奖券数量
+                // Update ticket count in user info
                 if (currentUser) {
                     currentUser.ticketCount = tickets.length;
                     updateUserInfo();
                 }
-                // 刷新返佣余额显示
+                // Refresh referral balance
                 try {
                     if (typeof firebase !== 'undefined' && firebase.functions && wallet && wallet.publicKey) {
                         const getBalance = firebase.app().functions().httpsCallable('getReferralBalance');
@@ -1228,24 +1218,24 @@
                         if (res && res.data && referralBalanceEl) {
                             referralBalanceEl.textContent = (res.data.balance || 0).toString();
                         }
-                        // 统计邀请人数与累计收益
+                        // Count invited users and total earnings
                         const myWallet = wallet.publicKey.toString();
-                        // 被我邀请的人数：users 中 referrer == myWallet
+                        // Users I invited: users where referrer == myWallet
                         const invitedSnap = await db.collection('users').where('referrer', '==', myWallet).get();
                         if (referralPeopleEl) referralPeopleEl.textContent = invitedSnap.size.toString();
-                        // 我的累计返佣总额：referralRewards 中 userId == myWallet 累加 amount
+                        // My total referral earnings: sum referralRewards where userId == myWallet
                         const rewardsSnap = await db.collection('referralRewards').where('userId', '==', myWallet).get();
                         let totalEarn = 0;
                         rewardsSnap.forEach(doc => { const a = Number(doc.data().amount || 0); if (!Number.isNaN(a)) totalEarn += a; });
                         if (referralEarningsEl) referralEarningsEl.textContent = totalEarn.toString();
                     }
                 } catch (e) {
-                    // 忽略余额获取失败
+                    // Ignore balance fetch failure
                 }
                 
             } catch (error) {
-                console.error('加载奖券失败:', error);
-                // 如果失败，设置默认值
+                console.error('Failed to load tickets:', error);
+                // On failure, fallback defaults
                 if (currentUser) {
                     currentUser.ticketCount = 0;
                     updateUserInfo();
@@ -1253,30 +1243,30 @@
             }
         }
 
-        // 购票
+        // Buy ticket
         async function buyTicket(amount) {
             if (!wallet || !currentUser || !currentRound) {
-                showNotification('请先连接钱包', 'error');
+                showNotification('Please connect wallet first', 'error');
                 return;
             }
             
             try {
-                showLoading('处理购票中...');
+                showLoading('Processing purchase...');
                 
-                // 获取当前 SOL 价格
+                // Fetch current SOL price
                 await fetchSolPrice();
                 
-                // 计算需要支付的 SOL 数量
+                // Calculate needed SOL amount
                 const solAmount = amount / currentSolPrice;
                 const lamports = convertUToLamports(amount);
                 
                 console.log(`${amount}U = ${solAmount.toFixed(4)} SOL (${lamports} lamports)`);
                 
-                // 创建交易
+                // Create transaction
                 const transaction = new solanaWeb3.Transaction();
                 
-                // 这里应该发送到你的项目钱包地址
-                const recipientAddress = new solanaWeb3.PublicKey('6N9GiSmCPDQBoLmGGdEF5RyTAu3osQFe4GTFJwFUEhKo');
+                // Send to your project wallet address
+                const recipientAddress = new solanaWeb3.PublicKey('7gD46f6r75znofwTRprqZtgAaTCdcagp6m2r6nqWHg4C');
                 
                 transaction.add(
                     solanaWeb3.SystemProgram.transfer({
@@ -1286,7 +1276,7 @@
                     })
                 );
 
-                // 获取最新的 blockhash 并设置 feePayer（带重试）
+                // Get latest blockhash and set feePayer (with retries)
                 let blockhash, lastValidBlockHeight;
                 for (let attempt = 0; attempt < 3; attempt++) {
                     try {
@@ -1303,7 +1293,7 @@
                 transaction.recentBlockhash = blockhash;
                 transaction.feePayer = wallet.publicKey;
 
-                // 签名并发送交易
+                // Sign and send transaction
                 const signedTx = await wallet.signTransaction(transaction);
                 const txid = await connection.sendRawTransaction(signedTx.serialize(), {
                     skipPreflight: false,
@@ -1311,46 +1301,46 @@
                     maxRetries: 5
                 });
                 
-                // 等待交易确认（简化确认逻辑）
+                // Wait for confirmation (simplified)
                 try {
                     await connection.confirmTransaction(txid, 'confirmed');
                 } catch (confirmErr) {
-                    console.warn('交易确认超时，但交易可能已成功:', confirmErr);
-                    // 继续执行，不因为确认超时而失败
+                console.warn('Transaction confirm timeout, may still have succeeded:', confirmErr);
+                    // Continue even if confirm times out
                 }
 
-                // 后端校验并记录购票
+                // Backend verify and record purchase
                 if (typeof firebase !== 'undefined' && firebase.functions) {
                     try {
                         const functionsClient = firebase.functions();
                         const record = firebase.app().functions().httpsCallable('recordPurchase');
                         await record({ amount, signature: txid, walletAddress: wallet.publicKey.toString(), referrer: referralReferrer });
                     } catch (fnErr) {
-                        console.warn('云函数记录购票失败，将回退到前端写入:', fnErr);
+                        console.warn('Cloud Function recordPurchase failed, fallback to frontend write:', fnErr);
                         await recordTicketPurchase(amount, txid);
                     }
                 } else {
                     await recordTicketPurchase(amount, txid);
                 }
 
-                showNotification(`成功购买 ${amount}U 奖券！(${solAmount.toFixed(4)} SOL)`, 'success');
+                showNotification(`Purchased ${amount}U ticket! (${solAmount.toFixed(4)} SOL)`, 'success');
                 await loadUserTickets();
                 await loadCurrentRound();
                 
             } catch (error) {
-                console.error('购票失败:', error);
-                showNotification('购票失败，请重试', 'error');
+                console.error('Purchase failed:', error);
+                showNotification('Purchase failed, please retry', 'error');
             } finally {
                 hideLoading();
             }
         }
 
-        // 记录购票
+        // Record purchase
         async function recordTicketPurchase(amount, signature) {
             try {
-                // 确保已认证
+                // Ensure authed
                 await ensureAuth();
-                // 记录奖券
+                // Record ticket
                 await db.collection('tickets').add({
                     userId: currentUser.uid,
                     walletAddress: wallet.publicKey.toString(),
@@ -1361,7 +1351,7 @@
                     createdAt: new Date(),
                 });
 
-                // 更新轮次参与者
+                // Update round participants
                 if (currentRound) {
                     try {
                         if (currentRound.id) {
@@ -1385,22 +1375,22 @@
                             }
                         }
                     } catch (e) {
-                        console.warn('无权限更新轮次，将等待后台处理:', e);
+                        console.warn('No permission to update round, waiting for backend processing:', e);
                     }
                 }
             } catch (error) {
-                console.error('记录购票失败:', error);
+                console.error('Failed to record purchase:', error);
             }
         }
 
-        // 触发开奖
+        // Trigger draw
         async function triggerLottery(roundId) {
-            // 前端不再直接修改轮次状态，交由云函数/后台处理
-            showNotification('轮次已满员，等待后台自动开奖', 'info');
+            // Frontend no longer updates round state directly; backend handles it
+            showNotification('Round is full, waiting for backend to draw', 'info');
             await loadCurrentRound();
         }
 
-        // 加载奖池信息
+        // Load pools info
         async function loadPoolInfo() {
             try {
                 const grandPrizeDoc = await db.collection('pools').doc('grandPrize').get();
@@ -1416,18 +1406,18 @@
                 if (grandPrizeElement) grandPrizeElement.textContent = grandPrizeAmount;
                 if (developerPoolElement) developerPoolElement.textContent = developerAmount;
                 
-                // 计算总奖券数（这里简化处理）
+                // Calculate total tickets (simplified)
                 const ticketsQuery = await db.collection('lotteryTickets').where('used', '==', false).get();
                 if (totalTicketsElement) totalTicketsElement.textContent = ticketsQuery.size;
                 
             } catch (error) {
-                console.error('加载奖池信息失败:', error);
+                console.error('Failed to load pool info:', error);
             }
         }
 
-        // 事件监听
+        // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
-            // 解析 URL 推荐人参数
+            // Parse URL referrer param
             try {
                 const url = new URL(window.location.href);
                 const ref = url.searchParams.get('ref');
@@ -1436,12 +1426,12 @@
                 }
             } catch (_) {}
 
-            // 钱包连接按钮
+            // Wallet connect button
             connectWalletBtn.addEventListener('click', () => {
                 walletModal.classList.remove('hidden');
             });
 
-            // 页脚钱包连接按钮
+            // Footer wallet connect button
             const footerWalletBtn = document.getElementById('footer-wallet-connect');
             if (footerWalletBtn) {
                 footerWalletBtn.addEventListener('click', () => {
@@ -1449,38 +1439,38 @@
                 });
             }
 
-            // 断开钱包
+            // Disconnect wallet
             disconnectWalletBtn.addEventListener('click', disconnectWallet);
 
-            // 购票按钮
+            // Buy tickets button
             buyTicketsBtn.addEventListener('click', () => {
                 if (!wallet) {
-                    showNotification('请先连接钱包', 'error');
+                    showNotification('Please connect wallet first', 'error');
                     return;
                 }
-                // 滚动到购票区域
+                // Scroll to ticket section
                 document.querySelector('#ticket-levels').scrollIntoView({ behavior: 'smooth' });
             });
 
-            // 模态框关闭
+            // Close modal
             closeModal.addEventListener('click', () => {
                 walletModal.classList.add('hidden');
             });
 
-            // 打开玩法说明
+            // Open rules
             const openRules = document.getElementById('open-rules');
             const rulesModal = document.getElementById('rules-modal');
             const closeRules = document.getElementById('close-rules');
             if (openRules && rulesModal && closeRules) {
                 openRules.addEventListener('click', () => rulesModal.classList.remove('hidden'));
                 closeRules.addEventListener('click', () => rulesModal.classList.add('hidden'));
-                // 点击遮罩关闭
+                // Click overlay to close
                 rulesModal.addEventListener('click', (e) => {
                     if (e.target === rulesModal) rulesModal.classList.add('hidden');
                 });
             }
 
-            // 打开历史记录
+            // Open history
             const openHistoryBtn = document.getElementById('open-history');
             const historyModal = document.getElementById('history-modal');
             const closeHistory = document.getElementById('close-history');
@@ -1489,13 +1479,13 @@
                     historyModal.classList.remove('hidden');
                 });
                 closeHistory.addEventListener('click', () => historyModal.classList.add('hidden'));
-                // 点击遮罩关闭
+                // Click overlay to close
                 historyModal.addEventListener('click', (e) => {
                     if (e.target === historyModal) historyModal.classList.add('hidden');
                 });
             }
 
-            // 开奖结果弹窗 - 关闭与遮罩点击关闭
+            // Draw result modal - close and overlay close
             if (closeDrawResult && drawResultModal) {
                 closeDrawResult.addEventListener('click', () => drawResultModal.classList.add('hidden'));
                 drawResultModal.addEventListener('click', (e) => {
@@ -1503,19 +1493,19 @@
                 });
             }
 
-            // 点击模态框外部关闭
+            // Click outside modal to close
             walletModal.addEventListener('click', (e) => {
                 if (e.target === walletModal) {
                     walletModal.classList.add('hidden');
                 }
             });
 
-            // 钱包连接按钮
+            // Wallet provider buttons
             phantomConnect.addEventListener('click', () => connectWallet('phantom'));
             solflareConnect.addEventListener('click', () => connectWallet('solflare'));
             coinbaseConnect.addEventListener('click', () => connectWallet('coinbase'));
 
-            // 购票按钮事件
+            // Tier buy buttons
             document.querySelectorAll('.buy-ticket-btn').forEach(button => {
                 button.addEventListener('click', () => {
                     const amount = parseInt(button.dataset.amount);
@@ -1523,20 +1513,20 @@
                 });
             });
 
-            // 复制邀请链接
+            // Copy referral link
             if (copyReferralLinkBtn && referralLinkInput) {
                 copyReferralLinkBtn.addEventListener('click', async () => {
                     try {
                         if (!referralLinkInput.value) return;
                         await navigator.clipboard.writeText(referralLinkInput.value);
-                        showNotification('邀请链接已复制', 'success');
+                        showNotification('Referral link copied', 'success');
                     } catch (e) {
-                        showNotification('复制失败，请手动复制', 'error');
+                        showNotification('Copy failed, please copy manually', 'error');
                     }
                 });
             }
 
-            // 平滑滚动
+            // Smooth scroll
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -1547,7 +1537,7 @@
                 });
             });
 
-            // 给卡片添加随机旋转角度
+            // Add random rotation to cards
             document.querySelectorAll('.rotate-random').forEach(el => {
                 if (!el.style.getPropertyValue('--rotation')) {
                     const rotation = (Math.random() * 6) - 3;
@@ -1555,9 +1545,9 @@
                 }
             });
 
-            // 初始化加载
+            // Initial load
             loadPoolInfo();
-            // 确保有活动轮次（通过云函数创建或获取）
+            // Ensure there is an active round (create or get via Cloud Function)
             (async () => {
                 try {
                     if (typeof firebase !== 'undefined' && firebase.functions) {
@@ -1570,14 +1560,14 @@
                         }
                     }
                 } catch (e) {
-                    console.warn('初始化活动轮次失败（将依赖实时监听）:', e);
+                    console.warn('Failed to init active round (will rely on realtime listener):', e);
                 }
             })();
-            // 初始化SOL价格显示
+            // Init SOL price display
             updateSolPriceDisplay();
-            fetchSolPrice(); // 初始化时调用获取 SOL 价格
+            fetchSolPrice(); // Init fetch SOL price
             
-            // 监听钱包连接状态
+            // Listen for wallet connection state
             if (window.solana) {
                 window.solana.on('connect', () => {
                     updateWalletUI();
@@ -1589,7 +1579,7 @@
             }
         });
 
-        // 实时监听轮次变化
+        // Realtime listen to rounds
         db.collection('rounds')
             .where('status', '==', 'active')
             .onSnapshot((snapshot) => {
@@ -1604,7 +1594,7 @@
                 }
             });
 
-        // 实时监听奖池变化
+        // Realtime listen to pools
         db.collection('pools').onSnapshot((snapshot) => {
             snapshot.docChanges().forEach((change) => {
                 if (change.type === 'modified' || change.type === 'added') {
