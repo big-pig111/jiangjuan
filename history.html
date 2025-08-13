@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>历史记录 | 抽奖应用</title>
+    <title>History | Lottery App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
@@ -29,97 +29,97 @@
     </script>
 </head>
 <body class="bg-gray-100 font-meme">
-    <!-- 导航栏 -->
+    <!-- Nav -->
     <nav class="sticky top-0 z-50 bg-memeYellow border-b-4 border-black shadow-lg">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-2">
                 <div class="text-4xl">🎯</div>
-                <h1 class="text-2xl md:text-3xl font-bold text-shadow">抽奖历史记录</h1>
+                <h1 class="text-2xl md:text-3xl font-bold text-shadow">Lottery History</h1>
             </div>
             <a href="index.html" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-md">
-                <i class="fa fa-home mr-2"></i> 返回首页
+                <i class="fa fa-home mr-2"></i> Back to Home
             </a>
         </div>
     </nav>
 
-    <!-- 主要内容 -->
+    <!-- Main -->
     <div class="container mx-auto px-4 py-8">
-        <!-- 统计概览 -->
+        <!-- Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <div class="bg-white p-6 rounded-xl border-2 border-black text-center shadow-lg">
                 <div class="text-3xl font-bold text-memeBlue" id="total-rounds">0</div>
-                <div class="text-sm text-gray-600">总轮次</div>
+                <div class="text-sm text-gray-600">Total Rounds</div>
             </div>
             <div class="bg-white p-6 rounded-xl border-2 border-black text-center shadow-lg">
                 <div class="text-3xl font-bold text-memeGreen" id="total-participants">0</div>
-                <div class="text-sm text-gray-600">总参与人数</div>
+                <div class="text-sm text-gray-600">Total Participants</div>
             </div>
             <div class="bg-white p-6 rounded-xl border-2 border-black text-center shadow-lg">
                 <div class="text-3xl font-bold text-memePink" id="total-prize">0</div>
-                <div class="text-sm text-gray-600">总奖金池(U)</div>
+                <div class="text-sm text-gray-600">Total Prize Pool (U)</div>
             </div>
             <div class="bg-white p-6 rounded-xl border-2 border-black text-center shadow-lg">
                 <div class="text-3xl font-bold text-memePurple" id="avg-prize">0</div>
-                <div class="text-sm text-gray-600">平均奖金(U)</div>
+                <div class="text-sm text-gray-600">Average Prize (U)</div>
             </div>
         </div>
 
-        <!-- 筛选器 -->
+        <!-- Filters -->
         <div class="bg-white p-4 rounded-xl border-2 border-black mb-6 shadow-lg">
             <div class="flex flex-wrap gap-4 items-center">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">状态筛选</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Status</label>
                     <select id="status-filter" class="border-2 border-black rounded-lg px-3 py-2">
-                        <option value="">全部状态</option>
-                        <option value="completed">已完成</option>
-                        <option value="active">进行中</option>
+                        <option value="">All Status</option>
+                        <option value="completed">Completed</option>
+                        <option value="active">Active</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">时间范围</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Time Range</label>
                     <select id="time-filter" class="border-2 border-black rounded-lg px-3 py-2">
-                        <option value="7">最近7天</option>
-                        <option value="30">最近30天</option>
-                        <option value="90">最近90天</option>
-                        <option value="all">全部时间</option>
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="all">All time</option>
                     </select>
                 </div>
                 <button id="refresh-btn" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-black transform hover:scale-105 transition-all">
-                    <i class="fa fa-refresh mr-2"></i> 刷新
+                    <i class="fa fa-refresh mr-2"></i> Refresh
                 </button>
             </div>
         </div>
 
-        <!-- 轮次列表 -->
+        <!-- Rounds list -->
         <div id="rounds-container" class="space-y-6">
-            <!-- 轮次卡片将通过 JavaScript 动态生成 -->
+            <!-- Round cards injected by JS -->
         </div>
 
-        <!-- 加载更多按钮 -->
+        <!-- Load more button -->
         <div class="text-center mt-8">
             <button id="load-more" class="bg-memeYellow hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-lg hidden">
-                <i class="fa fa-plus mr-2"></i> 加载更多
+                <i class="fa fa-plus mr-2"></i> Load More
             </button>
         </div>
     </div>
 
-    <!-- 轮次详情弹窗 -->
+    <!-- Round detail modal -->
     <div id="round-detail-modal" class="fixed inset-0 bg-black/50 z-[100] hidden">
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl border-4 border-black shadow-2xl overflow-hidden flex flex-col">
                 <div class="flex items-center justify-between px-6 py-4 border-b-4 border-black bg-memeYellow">
-                    <h3 class="text-xl font-bold">轮次详情</h3>
-                    <button id="close-detail-modal" class="bg-black text-white font-bold px-4 py-2 rounded-lg border-2 border-black">关闭</button>
+                    <h3 class="text-xl font-bold">Round Detail</h3>
+                    <button id="close-detail-modal" class="bg-black text-white font-bold px-4 py-2 rounded-lg border-2 border-black">Close</button>
                 </div>
                 <div id="round-detail-content" class="p-6 overflow-y-auto flex-1">
-                    <!-- 详情内容将通过 JavaScript 动态生成 -->
+                    <!-- Detail content injected by JS -->
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Firebase 配置
+        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyA5Z5ieEbAcfQX0kxGSn9ldGXhzvAwx_8M",
             authDomain: "chat-294cc.firebaseapp.com",
@@ -131,7 +131,7 @@
             measurementId: "G-SJR9NDW86B"
         };
 
-        // 初始化 Firebase
+        // Init Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -140,7 +140,7 @@
         const pageSize = 10;
         let hasMore = true;
 
-        // 加载轮次数据
+        // Load rounds
         async function loadRounds() {
             try {
                 const statusFilter = document.getElementById('status-filter').value;
@@ -171,11 +171,11 @@
                 document.getElementById('load-more').classList.toggle('hidden', !hasMore);
                 
             } catch (error) {
-                console.error('加载轮次失败:', error);
+                console.error('Failed to load rounds:', error);
             }
         }
 
-        // 显示轮次列表
+        // Render round list
         function displayRounds() {
             const container = document.getElementById('rounds-container');
             container.innerHTML = rounds.map(round => `
@@ -183,52 +183,48 @@
                     <div class="p-6">
                         <div class="flex justify-between items-start mb-4">
                             <div>
-                                <h3 class="text-xl font-bold text-memeBlack">轮次 ${round.id.slice(-8)}</h3>
+                <h3 class="text-xl font-bold text-memeBlack">Round ${round.id.slice(-8)}</h3>
                                 <p class="text-sm text-gray-600">
-                                    创建时间: ${round.createdAt ? new Date(round.createdAt.toDate()).toLocaleString() : '未知'}
+                                    Created at: ${round.createdAt ? new Date(round.createdAt.toDate()).toLocaleString() : 'Unknown'}
                                 </p>
                             </div>
                             <div class="text-right">
-                                <span class="inline-block px-3 py-1 rounded-full text-sm font-bold ${
-                                    round.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                }">
-                                    ${round.status === 'completed' ? '已完成' : '进行中'}
-                                </span>
+                                <span class="inline-block px-3 py-1 rounded-full text-sm font-bold ${round.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${round.status === 'completed' ? 'Completed' : 'Active'}</span>
                             </div>
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-memeBlue">${round.participants ? round.participants.length : 0}</div>
-                                <div class="text-sm text-gray-600">参与人数</div>
+                                <div class="text-sm text-gray-600">Participants</div>
                             </div>
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-memeGreen">${round.totalAmount || 0}</div>
-                                <div class="text-sm text-gray-600">总金额(U)</div>
+                                <div class="text-sm text-gray-600">Total (U)</div>
                             </div>
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-memePink">${round.prizeAmount || 0}</div>
-                                <div class="text-sm text-gray-600">奖金(U)</div>
+                                <div class="text-sm text-gray-600">Prize (U)</div>
                             </div>
                         </div>
                         
                         ${round.winner ? `
                             <div class="bg-memeYellow p-4 rounded-lg border-2 border-black mb-4">
-                                <h4 class="font-bold text-lg mb-2">🏆 中奖者</h4>
-                                <p class="text-sm">钱包地址: ${round.winner.walletAddress}</p>
-                                <p class="text-sm">中奖金额: ${round.prizeAmount || 0}U</p>
+                                <h4 class="font-bold text-lg mb-2">🏆 Winner</h4>
+                                <p class="text-sm">Wallet: ${round.winner.walletAddress}</p>
+                                <p class="text-sm">Prize: ${round.prizeAmount || 0}U</p>
                             </div>
                         ` : ''}
                         
                         <button onclick="showRoundDetail('${round.id}')" class="w-full bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-black transform hover:scale-105 transition-all">
-                            <i class="fa fa-eye mr-2"></i> 查看详情
+                             <i class="fa fa-eye mr-2"></i> View Details
                         </button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // 更新统计信息
+        // Update stats
         async function updateStats() {
             try {
                 const snapshot = await db.collection('rounds').get();
@@ -245,16 +241,16 @@
                 document.getElementById('avg-prize').textContent = avgPrize;
                 
             } catch (error) {
-                console.error('更新统计失败:', error);
+                console.error('Failed to update stats:', error);
             }
         }
 
-        // 显示轮次详情
+        // Show round detail
         async function showRoundDetail(roundId) {
             try {
                 const roundDoc = await db.collection('rounds').doc(roundId).get();
                 if (!roundDoc.exists) {
-                    alert('轮次不存在');
+                    alert('Round not found');
                     return;
                 }
                 
@@ -264,41 +260,41 @@
                 content.innerHTML = `
                     <div class="space-y-6">
                         <div class="bg-gray-50 p-4 rounded-lg">
-                            <h4 class="font-bold text-lg mb-2">基本信息</h4>
+                            <h4 class="font-bold text-lg mb-2">Basic Info</h4>
                             <div class="grid grid-cols-2 gap-4 text-sm">
-                                <div><strong>轮次ID:</strong> ${round.id}</div>
-                                <div><strong>状态:</strong> ${round.status === 'completed' ? '已完成' : '进行中'}</div>
-                                <div><strong>创建时间:</strong> ${round.createdAt ? new Date(round.createdAt.toDate()).toLocaleString() : '未知'}</div>
-                                <div><strong>处理时间:</strong> ${round.processedAt ? new Date(round.processedAt.toDate()).toLocaleString() : '未处理'}</div>
+                                <div><strong>Round ID:</strong> ${round.id}</div>
+                                <div><strong>Status:</strong> ${round.status === 'completed' ? 'Completed' : 'Active'}</div>
+                                <div><strong>Created At:</strong> ${round.createdAt ? new Date(round.createdAt.toDate()).toLocaleString() : 'Unknown'}</div>
+                                <div><strong>Processed At:</strong> ${round.processedAt ? new Date(round.processedAt.toDate()).toLocaleString() : 'Pending'}</div>
                             </div>
                         </div>
                         
                         <div class="bg-gray-50 p-4 rounded-lg">
-                            <h4 class="font-bold text-lg mb-2">奖池分配</h4>
+                            <h4 class="font-bold text-lg mb-2">Prize Distribution</h4>
                             <div class="grid grid-cols-2 gap-4 text-sm">
-                                <div><strong>总金额:</strong> ${round.totalAmount || 0}U</div>
-                                <div><strong>中奖金额:</strong> ${round.prizeAmount || 0}U</div>
-                                <div><strong>回购金额:</strong> ${round.buybackAmount || 0}U</div>
-                                <div><strong>推荐返佣:</strong> ${round.referralAmount || 0}U</div>
-                                <div><strong>总奖池:</strong> ${round.grandPrizeAmount || 0}U</div>
-                                <div><strong>开发者:</strong> ${round.developerAmount || 0}U</div>
+                                <div><strong>Total:</strong> ${round.totalAmount || 0}U</div>
+                                <div><strong>Prize:</strong> ${round.prizeAmount || 0}U</div>
+                                <div><strong>Buyback:</strong> ${round.buybackAmount || 0}U</div>
+                                <div><strong>Referrals:</strong> ${round.referralAmount || 0}U</div>
+                                <div><strong>Grand Prize:</strong> ${round.grandPrizeAmount || 0}U</div>
+                                <div><strong>Developers:</strong> ${round.developerAmount || 0}U</div>
                             </div>
                         </div>
                         
                         ${round.winner ? `
                             <div class="bg-memeYellow p-4 rounded-lg border-2 border-black">
-                                <h4 class="font-bold text-lg mb-2">🏆 中奖者信息</h4>
+                                <h4 class="font-bold text-lg mb-2">🏆 Winner Info</h4>
                                 <div class="space-y-2 text-sm">
-                                    <div><strong>钱包地址:</strong> ${round.winner.walletAddress}</div>
-                                    <div><strong>用户ID:</strong> ${round.winner.userId}</div>
-                                    <div><strong>参与金额:</strong> ${round.winner.amount}U</div>
-                                    <div><strong>参与时间:</strong> ${round.winner.timestamp ? new Date(round.winner.timestamp.toDate()).toLocaleString() : '未知'}</div>
+                                    <div><strong>Wallet Address:</strong> ${round.winner.walletAddress}</div>
+                                    <div><strong>User ID:</strong> ${round.winner.userId}</div>
+                                    <div><strong>Amount:</strong> ${round.winner.amount}U</div>
+                                    <div><strong>Time:</strong> ${round.winner.timestamp ? new Date(round.winner.timestamp.toDate()).toLocaleString() : 'Unknown'}</div>
                                 </div>
                             </div>
                         ` : ''}
                         
                         <div class="bg-gray-50 p-4 rounded-lg">
-                            <h4 class="font-bold text-lg mb-2">参与者列表 (${round.participants ? round.participants.length : 0}人)</h4>
+                            <h4 class="font-bold text-lg mb-2">Participants (${round.participants ? round.participants.length : 0})</h4>
                             <div class="max-h-60 overflow-y-auto">
                                 ${round.participants ? round.participants.map((participant, index) => `
                                     <div class="flex justify-between items-center py-2 border-b border-gray-200 ${participant.walletAddress === round.winner?.walletAddress ? 'bg-memeYellow' : ''}">
@@ -306,15 +302,15 @@
                                             <span class="text-sm font-bold">#${index + 1}</span>
                                             <div>
                                                 <div class="text-sm font-medium">${participant.walletAddress}</div>
-                                                <div class="text-xs text-gray-500">${participant.timestamp ? new Date(participant.timestamp.toDate()).toLocaleString() : '未知'}</div>
+                                                <div class="text-xs text-gray-500">${participant.timestamp ? new Date(participant.timestamp.toDate()).toLocaleString() : 'Unknown'}</div>
                                             </div>
                                         </div>
                                         <div class="text-right">
                                             <div class="text-sm font-bold">${participant.amount}U</div>
-                                            ${participant.walletAddress === round.winner?.walletAddress ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">🏆 中奖</span>' : ''}
+                                             ${participant.walletAddress === round.winner?.walletAddress ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">🏆 Winner</span>' : ''}
                                         </div>
                                     </div>
-                                `).join('') : '<p class="text-gray-500">暂无参与者</p>'}
+                                `).join('') : '<p class="text-gray-500">No participants</p>'}
                             </div>
                         </div>
                     </div>
@@ -323,39 +319,39 @@
                 document.getElementById('round-detail-modal').classList.remove('hidden');
                 
             } catch (error) {
-                console.error('加载轮次详情失败:', error);
-                alert('加载详情失败');
+                console.error('Failed to load round details:', error);
+                alert('Failed to load details');
             }
         }
 
-        // 事件监听
+        // Events
         document.addEventListener('DOMContentLoaded', function() {
-            // 筛选器变化
+            // Filters change
             document.getElementById('status-filter').addEventListener('change', loadRounds);
             document.getElementById('time-filter').addEventListener('change', loadRounds);
             
-            // 刷新按钮
+            // Refresh button
             document.getElementById('refresh-btn').addEventListener('click', loadRounds);
             
-            // 加载更多
+            // Load more
             document.getElementById('load-more').addEventListener('click', async () => {
                 currentPage++;
                 await loadRounds();
             });
             
-            // 关闭详情弹窗
+            // Close detail modal
             document.getElementById('close-detail-modal').addEventListener('click', () => {
                 document.getElementById('round-detail-modal').classList.add('hidden');
             });
             
-            // 点击遮罩关闭
+            // Click overlay to close
             document.getElementById('round-detail-modal').addEventListener('click', (e) => {
                 if (e.target === document.getElementById('round-detail-modal')) {
                     document.getElementById('round-detail-modal').classList.add('hidden');
                 }
             });
             
-            // 初始加载
+            // Initial load
             loadRounds();
         });
     </script>
