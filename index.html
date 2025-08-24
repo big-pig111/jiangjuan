@@ -5,11 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lottery App - 10 Players Draw</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
+    <script type="module">
+        // 导入 Firebase SDK
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+        import { getFirestore, collection, addDoc, doc, setDoc, getDoc, query, where, getDocs, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+        import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-functions.js';
+        
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5Z5ieEbAcfQX0kxGSn9ldGXhzvAwx_8M",
+            authDomain: "chat-294cc.firebaseapp.com",
+            databaseURL: "https://chat-294cc-default-rtdb.firebaseio.com",
+            projectId: "chat-294cc",
+            storageBucket: "chat-294cc.appspot.com",
+            messagingSenderId: "913615304269",
+            appId: "1:913615304269:web:0274ffaccb8e6b678e4e04",
+            measurementId: "G-SJR9NDW86B"
+        };
+        
+        // 初始化 Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const functions = getFunctions(app);
+        
+        // 将 Firebase 实例暴露到全局作用域
+        window.firebase = {
+            app: () => ({ functions: () => functions }),
+            functions: () => functions,
+            auth: () => auth,
+            firestore: () => db
+        };
+        
+        // 暴露其他必要的函数
+        window.firebaseAuth = { signInAnonymously, onAuthStateChanged };
+        window.firebaseFirestore = { collection, addDoc, doc, setDoc, getDoc, query, where, getDocs, orderBy, limit, onSnapshot };
+        window.firebaseFunctions = { httpsCallable };
+        
+        // 创建简化的Firestore操作函数
+        window.firestore = {
+            collection: (name) => ({
+                doc: (id) => ({
+                    onSnapshot: (callback) => onSnapshot(doc(db, name, id), callback),
+                    get: () => getDoc(doc(db, name, id)),
+                    update: (data) => setDoc(doc(db, name, id), data, { merge: true }),
+                    set: (data) => setDoc(doc(db, name, id), data)
+                }),
+                add: (data) => addDoc(collection(db, name), data),
+                where: (field, op, value) => ({
+                    get: () => getDocs(query(collection(db, name), where(field, op, value))),
+                    onSnapshot: (callback) => onSnapshot(query(collection(db, name), where(field, op, value)), callback)
+                }),
+                onSnapshot: (callback) => onSnapshot(collection(db, name), callback)
+            })
+        };
+        
+        // 创建安全的Firestore操作包装器
+        window.safeFirestore = {
+            collection: (name) => {
+                if (!window.firestore) {
+                    console.warn('Firestore not ready yet');
+                    return null;
+                }
+                return window.firestore.collection(name);
+            }
+        };
+        
+        // Firebase SDK 初始化完成，通知主脚本
+        if (typeof onFirebaseReady === 'function') {
+            onFirebaseReady();
+        }
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -90,10 +158,10 @@
             </div>
             
             <div class="flex items-center space-x-3">
-                <!-- SOL price -->
+                                  <!-- OKB price -->
                 <div class="bg-white px-3 py-1 rounded-lg border-2 border-black shadow-md">
-                    <span class="text-sm font-bold text-gray-600">SOL Price: </span>
-                    <span id="sol-price" class="text-sm font-bold text-memeBlue">$0.00</span>
+                    <span class="text-sm font-bold text-gray-600">OKB Price: </span>
+                    <span id="okb-price" class="text-sm font-bold text-memeBlue">$0.00</span>
                 </div>
                 <button id="wallet-connect" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-md">
                     <i class="fa fa-wallet mr-2"></i> Connect Wallet
@@ -272,24 +340,15 @@
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
                 <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">Choose <span class="text-memeGreen">Tier</span></h2>
-                <p class="text-xl text-gray-600">Choose your tier (1 ticket per 10U)</p>
+                <p class="text-xl text-gray-600">Choose your tier (2U or 10U)</p>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 max-w-5xl mx-auto">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
                 <!-- Tier cards -->
-                <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
-                    <div class="text-4xl mb-4">🥉</div>
-                    <h3 class="text-2xl font-bold mb-2">1U</h3>
-                    <p class="text-gray-600 mb-4">0.1 Ticket</p>
-                    <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="1">
-                        Buy Now
-                    </button>
-                </div>
-                
                 <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
                     <div class="text-4xl mb-4">🥈</div>
                     <h3 class="text-2xl font-bold mb-2">2U</h3>
-                    <p class="text-gray-600 mb-4">0.2 Ticket</p>
+                    <p class="text-gray-600 mb-4">0.2 Tickets</p>
                     <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="2">
                         Buy Now
                     </button>
@@ -303,24 +362,6 @@
                     <h3 class="text-2xl font-bold mb-2">10U</h3>
                     <p class="text-gray-800 mb-4">1 Ticket</p>
                     <button class="buy-ticket-btn w-full bg-black text-white hover:bg-gray-800 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="10">
-                        Buy Now
-                    </button>
-                </div>
-                
-                <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
-                    <div class="text-4xl mb-4">💎</div>
-                    <h3 class="text-2xl font-bold mb-2">50U</h3>
-                    <p class="text-gray-600 mb-4">5 Tickets</p>
-                    <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="50">
-                        Buy Now
-                    </button>
-                </div>
-                
-                <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
-                    <div class="text-4xl mb-4">🚀</div>
-                    <h3 class="text-2xl font-bold mb-2">100U</h3>
-                    <p class="text-gray-600 mb-4">10 Tickets</p>
-                    <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="100">
                         Buy Now
                     </button>
                 </div>
@@ -345,7 +386,7 @@
                         1
                     </div>
                     <h3 class="text-2xl font-bold mb-4 text-center">CONNECT WALLET</h3>
-                    <p class="text-center">Link your Solana wallet (Phantom, Solflare, whatever floats your boat)</p>
+                    <p class="text-center">Link your Ethereum wallet (MetaMask, WalletConnect, etc.)</p>
                 </div>
                 
                 <div class="bg-gray-50 p-6 rounded-2xl border-meme shadow-lg">
@@ -367,11 +408,11 @@
             
             <!-- Distribution -->
             <div class="mt-16 max-w-3xl mx-auto bg-gray-100 p-8 rounded-2xl border-meme shadow-lg">
-                <h3 class="text-2xl font-bold mb-6 text-center">PRIZE DISTRIBUTION (10u example)</h3>
+                <h3 class="text-2xl font-bold mb-6 text-center">PRIZE DISTRIBUTION (10U example)</h3>
                 
                 <div class="space-y-4">
                     <div class="flex items-center">
-                        <div class="w-24 font-bold">80u</div>
+                        <div class="w-24 font-bold">80U</div>
                         <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
                             <div class="bg-memeGreen h-full rounded-full" style="width: 80%"></div>
                         </div>
@@ -379,7 +420,7 @@
                     </div>
                     
                     <div class="flex items-center">
-                        <div class="w-24 font-bold">10u</div>
+                        <div class="w-24 font-bold">10U</div>
                         <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
                             <div class="bg-memePurple h-full rounded-full" style="width: 10%"></div>
                         </div>
@@ -387,7 +428,7 @@
                     </div>
                     
                     <div class="flex items-center">
-                        <div class="w-24 font-bold">5u</div>
+                        <div class="w-24 font-bold">5U</div>
                         <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
                             <div class="bg-memeBlue h-full rounded-full" style="width: 5%"></div>
                         </div>
@@ -395,7 +436,7 @@
                     </div>
                     
                     <div class="flex items-center">
-                        <div class="w-24 font-bold">4u</div>
+                        <div class="w-24 font-bold">4U</div>
                         <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
                             <div class="bg-memeYellow h-full rounded-full" style="width: 4%"></div>
                         </div>
@@ -403,7 +444,7 @@
                     </div>
                     
                     <div class="flex items-center">
-                        <div class="w-24 font-bold">1u</div>
+                        <div class="w-24 font-bold">1U</div>
                         <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
                             <div class="bg-memePink h-full rounded-full" style="width: 1%"></div>
                         </div>
@@ -424,7 +465,7 @@
                 
                 <div class="relative z-10">
                     <h2 class="text-4xl font-bold mb-6 text-white text-shadow text-center">REFER & <span class="text-memeYellow">EARN</span></h2>
-                    <p class="text-xl text-white mb-8 text-center">Get 0.5u for each person you refer (when they play)</p>
+                    <p class="text-xl text-white mb-8 text-center">Get 0.5U for each person you refer (when they play)</p>
                     
                     <div class="bg-white p-6 rounded-xl border-2 border-black mb-6">
                         <div class="flex flex-col md:flex-row gap-4">
@@ -467,7 +508,7 @@
                         <div class="text-3xl">🚀</div>
                         <h2 class="text-2xl font-bold">MOONSHOT <span class="text-memePink">LOTTERY</span></h2>
                     </div>
-                    <p class="text-gray-400">The most meme-tastic lottery on Solana. Win big or go home!</p>
+                    <p class="text-gray-400">The most meme-tastic lottery on X Layer. Win big or go home!</p>
                 </div>
                 
                 <div>
@@ -538,116 +579,115 @@
             </div>
             
             <div class="space-y-4">
-                <button id="phantom-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
-                    <img src="https://picsum.photos/id/1/40/40" alt="Phantom Wallet logo" class="w-8 h-8">
-                    Phantom
+                                    <button id="metamask-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
+                        <img src="https://picsum.photos/id/1/40/40" alt="MetaMask Wallet logo" class="w-8 h-8">
+                        MetaMask
+                    </button>
+                
+                <button id="walletconnect-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
+                    <img src="https://picsum.photos/id/2/40/40" alt="WalletConnect logo" class="w-8 h-8">
+                    WalletConnect
                 </button>
                 
-                <button id="solflare-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
-                    <img src="https://picsum.photos/id/2/40/40" alt="Solflare Wallet logo" class="w-8 h-8">
-                    Solflare
-                </button>
-                
-                <button id="coinbase-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
-                    <img src="https://picsum.photos/id/3/40/40" alt="Coinbase Wallet logo" class="w-8 h-8">
-                    Coinbase Wallet
+                <button id="injected-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
+                    <img src="https://picsum.photos/id/3/40/40" alt="Injected Wallet logo" class="w-8 h-8">
+                    Injected
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        // Firebase config
-        const firebaseConfig = {
-            apiKey: "AIzaSyA5Z5ieEbAcfQX0kxGSn9ldGXhzvAwx_8M",
-            authDomain: "chat-294cc.firebaseapp.com",
-            databaseURL: "https://chat-294cc-default-rtdb.firebaseio.com",
-            projectId: "chat-294cc",
-            storageBucket: "chat-294cc.appspot.com",
-            messagingSenderId: "913615304269",
-            appId: "1:913615304269:web:0274ffaccb8e6b678e4e04",
-            measurementId: "G-SJR9NDW86B"
-        };
-
-        // Init Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        
-        // Enable anonymous auth to avoid permission issues
-        auth.signInAnonymously()
-            .then(() => {
-                console.log('Anonymous auth success');
-            })
-            .catch((error) => {
-                console.error('Anonymous auth failed:', error);
-            });
+        // Firebase SDK 初始化完成后的回调
+        function onFirebaseReady() {
+            // Enable anonymous auth to avoid permission issues
+            if (window.firebaseAuth && window.firebase) {
+                window.firebaseAuth.signInAnonymously(window.firebase.auth())
+                    .then(() => {
+                        console.log('Anonymous auth success');
+                    })
+                    .catch((error) => {
+                        console.error('Anonymous auth failed:', error);
+                    });
+            }
+        }
 
         // Ensure auth before writing
         async function ensureAuth() {
-            if (auth.currentUser) return auth.currentUser;
+            if (!window.firebase || !window.firebaseAuth) {
+                console.warn('Firebase not ready yet');
+                return null;
+            }
+            
+            if (window.firebase.auth().currentUser) return window.firebase.auth().currentUser;
             return await new Promise(async (resolve) => {
-                const unsubscribe = auth.onAuthStateChanged((user) => {
+                const unsubscribe = window.firebaseAuth.onAuthStateChanged(window.firebase.auth(), (user) => {
                     if (user) {
                         unsubscribe();
                         resolve(user);
                     }
                 });
-                try { await auth.signInAnonymously(); } catch (e) {}
+                try { 
+                    if (window.firebaseAuth && window.firebase) {
+                        await window.firebaseAuth.signInAnonymously(window.firebase.auth()); 
+                    }
+                } catch (e) {
+                    console.warn('Anonymous auth failed:', e);
+                }
             });
         }
 
-        // Solana connection - reliable RPC endpoint
-        const connection = new solanaWeb3.Connection('https://small-holy-forest.solana-mainnet.quiknode.pro/b59315ea187b3de1b3542c5c25d7f2d5b5410ff4/');
+        // X Layer connection - reliable RPC endpoint
+        let provider = null;
         let wallet = null;
         let currentUser = null;
         let currentRound = null;
-        let currentSolPrice = 1; // default SOL price, will be updated on init
+        let currentOKBPrice = 1; // default OKB price, will be updated on init
         let referralReferrer = null; // referrer from URL
 
         // Fetch SOL price
-        async function fetchSolPrice() {
+        async function fetchOKBPrice() {
             try {
-                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
-                const data = await response.json();
-                if (data.solana && data.solana.usd) {
-                    currentSolPrice = data.solana.usd;
-                    console.log('Current SOL price:', currentSolPrice, 'USD');
-                    updateSolPriceDisplay();
-                    return currentSolPrice;
+                        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=okb&vs_currencies=usd');
+        const data = await response.json();
+        if (data.okb && data.okb.usd) {
+            currentOKBPrice = data.okb.usd;
+                                         console.log('Current OKB price:', currentOKBPrice, 'USD');
+                     updateOKBPriceDisplay();
+                                         return currentOKBPrice;
                 } else {
-                    console.warn('Failed to fetch SOL price, using default 1 USD');
-                    currentSolPrice = 1;
-                    updateSolPriceDisplay();
+                                     console.warn('Failed to fetch OKB price, using default 1 USD');
+                 currentOKBPrice = 1;
+                    updateOKBPriceDisplay();
                     return 1;
                 }
             } catch (error) {
-                console.error('Failed to fetch SOL price:', error);
-                currentSolPrice = 1;
-                updateSolPriceDisplay();
+                console.error('Failed to fetch OKB price:', error);
+                currentOKBPrice = 1;
+                updateOKBPriceDisplay();
                 return 1;
             }
         }
 
-        // Update SOL price display
-        function updateSolPriceDisplay() {
-            const solPriceElement = document.getElementById('sol-price');
-            if (solPriceElement) {
-                solPriceElement.textContent = `$${currentSolPrice.toFixed(2)}`;
+        // Update OKB price display
+        function updateOKBPriceDisplay() {
+            const okbPriceElement = document.getElementById('okb-price');
+            if (okbPriceElement) {
+                okbPriceElement.textContent = `$${currentOKBPrice.toFixed(2)}`;
                 // If price fetch failed, show warning style
-                if (currentSolPrice === 1) {
-                    solPriceElement.classList.add('text-red-500');
-                    solPriceElement.title = 'Failed to fetch price, using default';
+                if (currentOKBPrice === 1) {
+                    okbPriceElement.classList.add('text-red-500');
+                    okbPriceElement.title = 'Failed to fetch price, using default';
                 } else {
-                    solPriceElement.classList.remove('text-red-500');
-                    solPriceElement.title = '';
+                    okbPriceElement.classList.remove('text-red-500');
+                    okbPriceElement.title = '';
                 }
             }
         }
 
-        // Convert U to lamports
-        function convertUToLamports(uAmount) {
-            return Math.floor(uAmount * solanaWeb3.LAMPORTS_PER_SOL / currentSolPrice);
+        // Convert U to OKB (wei)
+        function convertUToOKB(uAmount) {
+            return Math.floor(uAmount * 1e18 / currentOKBPrice);
         }
 
         // DOM elements
@@ -663,9 +703,9 @@
         const loadingText = document.getElementById('loading-text');
         const walletModal = document.getElementById('wallet-modal');
         const closeModal = document.getElementById('close-modal');
-        const phantomConnect = document.getElementById('phantom-connect');
-        const solflareConnect = document.getElementById('solflare-connect');
-        const coinbaseConnect = document.getElementById('coinbase-connect');
+        const metamaskConnect = document.getElementById('metamask-connect');
+        const walletconnectConnect = document.getElementById('walletconnect-connect');
+        const injectedConnect = document.getElementById('injected-connect');
         const drawResultModal = document.getElementById('draw-result-modal');
         const closeDrawResult = document.getElementById('close-draw-result');
         const drawResultContent = document.getElementById('draw-result-content');
@@ -703,9 +743,9 @@
         }
 
         function updateWalletUI() {
-            if (wallet && wallet.publicKey) {
-                const address = wallet.publicKey.toString();
-                walletAddress.textContent = `${address.slice(0, 4)}...${address.slice(-4)}`;
+            if (currentUser && currentUser.walletAddress) {
+                const address = currentUser.walletAddress;
+                walletAddress.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
                 connectWalletBtn.classList.add('hidden');
                 walletInfo.classList.remove('hidden');
                 buyTicketsBtn.classList.remove('hidden');
@@ -905,7 +945,7 @@
             if (!roundId) return;
             try { if (typeof activeRoundUnsubscribe === 'function') activeRoundUnsubscribe(); } catch (_) {}
 
-            activeRoundUnsubscribe = db.collection('rounds').doc(roundId).onSnapshot((doc) => {
+            activeRoundUnsubscribe = window.firestore.collection('rounds').doc(roundId).onSnapshot((doc) => {
                 if (!doc.exists) return;
                 const data = doc.data();
                 // Show only the first time the round completes
@@ -923,7 +963,7 @@
                     userInfo.innerHTML = `
                         <div>
                             <span class="text-gray-600">Wallet:</span>
-                            <p class="text-sm font-mono break-all">${currentUser.walletAddress}</p>
+                            <p class="text-sm font-mono break-all">${currentUser.walletAddress.slice(0, 6)}...${currentUser.walletAddress.slice(-4)}</p>
                         </div>
                         <div>
                             <span class="text-gray-600">My Tickets:</span>
@@ -937,53 +977,23 @@
         }
 
         // Wallet connect
-        async function connectWallet(walletType = 'phantom') {
+        async function connectWallet(walletType = 'metamask') {
             try {
                 showLoading('Connecting wallet...');
                 
-                let walletProvider;
-                
-                switch(walletType) {
-                    case 'phantom':
-                        if (!window.solana || !window.solana.isPhantom) {
-                            showNotification('Please install Phantom wallet first', 'error');
-                            hideLoading();
-                            return;
-                        }
-                        walletProvider = window.solana;
-                        break;
-                    case 'solflare':
-                        if (!window.solflare) {
-                            showNotification('Please install Solflare wallet first', 'error');
-                            hideLoading();
-                            return;
-                        }
-                        walletProvider = window.solflare;
-                        break;
-                    case 'coinbase':
-                        if (!window.coinbaseSolana) {
-                            showNotification('Please install Coinbase wallet first', 'error');
-                            hideLoading();
-                            return;
-                        }
-                        walletProvider = window.coinbaseSolana;
-                        break;
-                    default:
-                        showNotification('Unsupported wallet type', 'error');
-                        hideLoading();
-                        return;
+                if (!window.ethereum) {
+                    showNotification('Please install MetaMask or another Ethereum wallet first', 'error');
+                    hideLoading();
+                    return;
                 }
 
-                // Connect
-                const response = await walletProvider.connect();
-                wallet = walletProvider;
+                // Request account access
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const walletAddress = accounts[0];
                 
                 // Ensure anonymous auth is ready
                 await ensureAuth();
 
-                // Use wallet address as user ID
-                const walletAddress = response.publicKey.toString();
-                
                 // Create or get user (not relying on Firebase Auth)
                 currentUser = {
                     uid: walletAddress,
@@ -992,7 +1002,7 @@
 
                 // Try to create user record (non-blocking on failure)
                 try {
-                    const userRef = db.collection('users').doc(walletAddress);
+                    const userRef = window.firestore.collection('users').doc(walletAddress);
                     await userRef.set({
                         walletAddress: walletAddress,
                         createdAt: new Date(),
@@ -1020,9 +1030,7 @@
 
         // Disconnect wallet
         function disconnectWallet() {
-            if (wallet) {
-                wallet.disconnect();
-                wallet = null;
+            if (currentUser) {
                 currentUser = null;
                 updateWalletUI();
                 updateUserInfo();
@@ -1033,7 +1041,7 @@
         // Load current round
         async function loadCurrentRound() {
             try {
-                const roundsQuery = db.collection('rounds')
+                const roundsQuery = window.firestore.collection('rounds')
                     .where('status', '==', 'active')
                     .orderBy('createdAt', 'desc')
                     .limit(1);
@@ -1070,7 +1078,7 @@
             if (!currentUser) return;
             
             try {
-                const ticketsQuery = db.collection('tickets')
+                const ticketsQuery = window.firestore.collection('tickets')
                     .where('userId', '==', currentUser.uid)
                     .orderBy('createdAt', 'desc')
                     .limit(10);
@@ -1118,10 +1126,10 @@
                         // Count invited users and total earnings
                         const myWallet = wallet.publicKey.toString();
                         // Users I invited: users where referrer == myWallet
-                        const invitedSnap = await db.collection('users').where('referrer', '==', myWallet).get();
+                        const invitedSnap = await window.firestore.collection('users').where('referrer', '==', myWallet).get();
                         if (referralPeopleEl) referralPeopleEl.textContent = invitedSnap.size.toString();
                         // My total referral earnings: sum referralRewards where userId == myWallet
-                        const rewardsSnap = await db.collection('referralRewards').where('userId', '==', myWallet).get();
+                        const rewardsSnap = await window.firestore.collection('referralRewards').where('userId', '==', myWallet).get();
                         let totalEarn = 0;
                         rewardsSnap.forEach(doc => { const a = Number(doc.data().amount || 0); if (!Number.isNaN(a)) totalEarn += a; });
                         if (referralEarningsEl) referralEarningsEl.textContent = totalEarn.toString();
@@ -1142,7 +1150,7 @@
 
         // Buy ticket
         async function buyTicket(amount) {
-            if (!wallet || !currentUser || !currentRound) {
+            if (!currentUser || !window.ethereum || !currentRound) {
                 showNotification('Please connect wallet first', 'error');
                 return;
             }
@@ -1150,68 +1158,39 @@
             try {
                 showLoading('Processing purchase...');
                 
-                // Fetch current SOL price
-                await fetchSolPrice();
+                // Fetch current OKB price
+                await fetchOKBPrice();
                 
-                // Calculate needed SOL amount
-                const solAmount = amount / currentSolPrice;
-                const lamports = convertUToLamports(amount);
+                // Calculate needed OKB amount
+                const okbAmount = amount / currentOKBPrice;
+                const okbWei = ethers.parseEther(okbAmount.toString());
                 
-                console.log(`${amount}U = ${solAmount.toFixed(4)} SOL (${lamports} lamports)`);
+                console.log(`${amount}U = ${okbAmount.toFixed(4)} OKB`);
                 
-                // Create transaction
-                const transaction = new solanaWeb3.Transaction();
+                // Create OKB transfer transaction
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const signer = await provider.getSigner();
                 
-                // Send to your project wallet address
-                const recipientAddress = new solanaWeb3.PublicKey('7gD46f6r75znofwTRprqZtgAaTCdcagp6m2r6nqWHg4C');
+                // OKB代币合约地址（X Layer主网）
+                const okbContractAddress = '0x4200000000000000000000000000000000000006';
+                const projectWalletAddress = '0x520e3d52a7c9ba19d8dc606adb873cbf9419a031';
                 
-                transaction.add(
-                    solanaWeb3.SystemProgram.transfer({
-                        fromPubkey: wallet.publicKey,
-                        toPubkey: recipientAddress,
-                        lamports: lamports,
-                    })
-                );
-
-                // Get latest blockhash and set feePayer (with retries)
-                let blockhash, lastValidBlockHeight;
-                for (let attempt = 0; attempt < 3; attempt++) {
-                    try {
-                        const blockhashResult = await connection.getLatestBlockhash('confirmed');
-                        blockhash = blockhashResult.blockhash;
-                        lastValidBlockHeight = blockhashResult.lastValidBlockHeight;
-                        break;
-                    } catch (e) {
-                        if (attempt === 2) throw e;
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                    }
-                }
+                // OKB代币合约ABI（只包含transfer函数）
+                const okbContract = new ethers.Contract(okbContractAddress, [
+                    'function transfer(address to, uint256 amount) returns (bool)'
+                ], signer);
                 
-                transaction.recentBlockhash = blockhash;
-                transaction.feePayer = wallet.publicKey;
-
-                // Sign and send transaction
-                const signedTx = await wallet.signTransaction(transaction);
-                const txid = await connection.sendRawTransaction(signedTx.serialize(), {
-                    skipPreflight: false,
-                    preflightCommitment: 'confirmed',
-                    maxRetries: 5
-                });
-                
-                // Wait for confirmation (simplified)
-                try {
-                    await connection.confirmTransaction(txid, 'confirmed');
-                } catch (confirmErr) {
-                console.warn('Transaction confirm timeout, may still have succeeded:', confirmErr);
-                    // Continue even if confirm times out
-                }
+                // Send OKB transfer
+                const tx = await okbContract.transfer(projectWalletAddress, okbWei);
+                const receipt = await tx.wait();
+                const txid = receipt.transactionHash;
 
                 // Backend verify and record purchase
                 if (typeof firebase !== 'undefined' && firebase.functions) {
                     try {
                         const functionsClient = firebase.functions();
                         const record = firebase.app().functions().httpsCallable('recordPurchase');
-                        await record({ amount, signature: txid, walletAddress: wallet.publicKey.toString(), referrer: referralReferrer });
+                        await record({ amount, signature: txid, walletAddress: currentUser.walletAddress, referrer: referralReferrer });
                     } catch (fnErr) {
                         console.warn('Cloud Function recordPurchase failed, fallback to frontend write:', fnErr);
                         await recordTicketPurchase(amount, txid);
@@ -1220,7 +1199,7 @@
                     await recordTicketPurchase(amount, txid);
                 }
 
-                showNotification(`Purchased ${amount}U ticket! (${solAmount.toFixed(4)} SOL)`, 'success');
+                showNotification(`Purchased ${amount}U ticket! (${okbAmount.toFixed(4)} OKB)`, 'success');
                 await loadUserTickets();
                 await loadCurrentRound();
                 
@@ -1238,7 +1217,7 @@
                 // Ensure authed
                 await ensureAuth();
                 // Record ticket
-                await db.collection('tickets').add({
+                await window.firestore.collection('tickets').add({
                     userId: currentUser.uid,
                     walletAddress: wallet.publicKey.toString(),
                     level: amount,
@@ -1252,13 +1231,13 @@
                 if (currentRound) {
                     try {
                         if (currentRound.id) {
-                            const roundRef = db.collection('rounds').doc(currentRound.id);
+                            const roundRef = window.firestore.collection('rounds').doc(currentRound.id);
                             const roundDoc = await roundRef.get();
                             if (roundDoc.exists) {
                                 const roundData = roundDoc.data();
                                 const newParticipants = [...(roundData.participants || []), {
                                     userId: currentUser.uid,
-                                    walletAddress: wallet.publicKey.toString(),
+                                    walletAddress: currentUser.walletAddress,
                                     amount: amount,
                                     timestamp: new Date(),
                                 }];
@@ -1290,8 +1269,8 @@
         // Load pools info
         async function loadPoolInfo() {
             try {
-                const grandPrizeDoc = await db.collection('pools').doc('grandPrize').get();
-                const developerDoc = await db.collection('pools').doc('developer').get();
+                const grandPrizeDoc = await window.firestore.collection('pools').doc('grandPrize').get();
+                const developerDoc = await window.firestore.collection('pools').doc('developer').get();
                 
                 const grandPrizeAmount = grandPrizeDoc.exists ? grandPrizeDoc.data().amount || 0 : 0;
                 const developerAmount = developerDoc.exists ? developerDoc.data().amount || 0 : 0;
@@ -1304,7 +1283,7 @@
                 if (developerPoolElement) developerPoolElement.textContent = developerAmount;
                 
                 // Calculate total tickets (simplified)
-                const ticketsQuery = await db.collection('lotteryTickets').where('used', '==', false).get();
+                const ticketsQuery = await window.firestore.collection('lotteryTickets').where('used', '==', false).get();
                 if (totalTicketsElement) totalTicketsElement.textContent = ticketsQuery.size;
                 
             } catch (error) {
@@ -1341,7 +1320,7 @@
 
             // Buy tickets button
             buyTicketsBtn.addEventListener('click', () => {
-                if (!wallet) {
+                if (!currentUser) {
                     showNotification('Please connect wallet first', 'error');
                     return;
                 }
@@ -1398,9 +1377,9 @@
             });
 
             // Wallet provider buttons
-            phantomConnect.addEventListener('click', () => connectWallet('phantom'));
-            solflareConnect.addEventListener('click', () => connectWallet('solflare'));
-            coinbaseConnect.addEventListener('click', () => connectWallet('coinbase'));
+            metamaskConnect.addEventListener('click', () => connectWallet('metamask'));
+            walletconnectConnect.addEventListener('click', () => connectWallet('walletconnect'));
+            injectedConnect.addEventListener('click', () => connectWallet('injected'));
 
             // Tier buy buttons
             document.querySelectorAll('.buy-ticket-btn').forEach(button => {
@@ -1460,45 +1439,74 @@
                     console.warn('Failed to init active round (will rely on realtime listener):', e);
                 }
             })();
-            // Init SOL price display
-            updateSolPriceDisplay();
-            fetchSolPrice(); // Init fetch SOL price
+            // Init OKB price display
+            updateOKBPriceDisplay();
+            fetchOKBPrice(); // Init fetch OKB price
             
             // Listen for wallet connection state
-            if (window.solana) {
-                window.solana.on('connect', () => {
-                    updateWalletUI();
+            if (window.ethereum) {
+                window.ethereum.on('accountsChanged', (accounts) => {
+                    if (accounts.length === 0) {
+                        disconnectWallet();
+                    } else {
+                        updateWalletUI();
+                    }
                 });
                 
-                window.solana.on('disconnect', () => {
-                    disconnectWallet();
+                window.ethereum.on('chainChanged', () => {
+                    window.location.reload();
                 });
             }
         });
 
-        // Realtime listen to rounds
-        db.collection('rounds')
-            .where('status', '==', 'active')
-            .onSnapshot((snapshot) => {
-                if (!snapshot.empty) {
-                    const round = snapshot.docs[0];
-                    currentRound = {
-                        id: round.id,
-                        ...round.data()
-                    };
-                    updateRoundInfo(currentRound);
-                    if (currentRound && currentRound.id) attachRoundListener(currentRound.id);
-                }
-            });
+        // 启动实时监听器（等待Firebase就绪）
+        function startRealtimeListeners() {
+            if (!window.firestore) {
+                console.warn('Firestore not ready yet, retrying in 1 second...');
+                setTimeout(startRealtimeListeners, 1000);
+                return;
+            }
+            
+            console.log('Starting realtime listeners...');
+            
+            try {
+                // Realtime listen to rounds
+                window.firestore.collection('rounds')
+                    .where('status', '==', 'active')
+                    .onSnapshot((snapshot) => {
+                        if (!snapshot.empty) {
+                            const round = snapshot.docs[0];
+                            currentRound = {
+                                id: round.id,
+                                ...round.data()
+                            };
+                            updateRoundInfo(currentRound);
+                            if (currentRound && currentRound.id) attachRoundListener(currentRound.id);
+                        }
+                    });
 
-        // Realtime listen to pools
-        db.collection('pools').onSnapshot((snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-                if (change.type === 'modified' || change.type === 'added') {
-                    loadPoolInfo();
-                }
-            });
-        });
+                // Realtime listen to pools
+                window.firestore.collection('pools').onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'modified' || change.type === 'added') {
+                            loadPoolInfo();
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to start realtime listeners:', error);
+            }
+        }
+        
+        // 在Firebase就绪后启动实时监听器
+        if (typeof onFirebaseReady === 'function') {
+            const originalOnFirebaseReady = onFirebaseReady;
+            window.onFirebaseReady = function() {
+                originalOnFirebaseReady();
+                // 延迟启动实时监听器，确保Firebase完全就绪
+                setTimeout(startRealtimeListeners, 100);
+            };
+        }
 
 
 
