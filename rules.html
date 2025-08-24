@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to Play | Lottery App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+</head>
+<body class="bg-white text-gray-800">
+  <div class="max-w-3xl mx-auto px-6 py-10">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-memePurple mb-6">How to Play (Whitepaper)</h1>
+
+    <div class="space-y-8 leading-relaxed">
+      <section>
+        <h2 class="text-2xl font-bold mb-3">1. Basic Rules</h2>
+        <p>Each tier draws automatically once there are 10 participants in that specific tier. There are 2 separate tiers: 2U and 10U. Each tier runs independently with separate rounds. The U amount is dynamically converted based on the current OKB/USD price, and payment is made in OKB on X Layer network.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">2. Prize Distribution</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>80% to the winner of the round</li>
+          <li>10% for token buyback (platform retained)</li>
+          <li>5% for referral rewards (evenly split among valid referrers of the participants; e.g., if all 10 players have referrers, each referrer gets 0.5U; total 5U)</li>
+          <li>4% goes to the weekly grand prize pool</li>
+          <li>1% goes to the developer pool</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">3. Tickets and Weekly Grand Prize</h2>
+        <p>For every 10U spent, you earn 1 ticket (rounded down). Each week, the system draws 1 winner from all unused tickets. The winner receives the entire weekly grand prize pool, and the winning ticket is then marked as used.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">4. On-chain Payment and Verification</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Users transfer on Solana mainnet to the platform’s project address using a supported wallet.</li>
+          <li>Backend Cloud Functions verify the transaction hash on-chain. Only confirmed and valid incoming transfers are recorded as round participation.</li>
+          <li>Idempotent recording: the same transaction hash can only be recorded once, preventing duplicates.</li>
+          <li>The incoming OKB amount is converted to USD using the current OKB/USD price to derive the U amount.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">5. Drawing and Transparency</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Each round draws automatically when 10 participants are reached, using backend random selection (can switch to a verifiable randomness source in future versions).</li>
+          <li>Win records and pool changes are written to Firestore and can be viewed in real time on the frontend.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">6. Referral Rewards</h2>
+        <p>If a participant has a referrer bound, the 5U referral pool is split evenly among the referrers of the valid participants in that round (example: if all 10 participants have referrers, each referrer gets 0.5U). Referral balances can be withdrawn in future versions.</p>
+        <p class="mt-2"><strong>Payout Threshold:</strong> Referral rewards are paid out to a wallet once the accumulated balance reaches <strong>1U</strong>. Any amount under 1U will continue to accumulate until the threshold is met, then it will be automatically paid or withdrawn by request.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">7. Risk Disclaimer</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Crypto assets are highly volatile. Participate responsibly.</li>
+          <li>Use official wallets and ensure you are operating on mainnet. Always verify the destination address.</li>
+          <li>No guaranteed returns. This is an entertainment-focused lottery application.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold mb-3">8. Contact</h2>
+        <p>If you have questions or suggestions, please send in-app feedback or open an issue in the repository.</p>
+      </section>
+    </div>
+  </div>
+</body>
+</html>
+
+
