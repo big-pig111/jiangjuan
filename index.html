@@ -343,7 +343,7 @@
                     <h3 class="text-xl font-extrabold">How It Works</h3>
                     <button id="close-rules" class="bg-black text-white font-bold px-3 py-1 rounded-lg border-2 border-black">Close</button>
                 </div>
-                <iframe src="rules.html" class="w-full flex-1"></iframe>
+                <iframe src="/rules.html" class="w-full flex-1" onerror="this.replaceWith(document.createElement('div'));"></iframe>
             </div>
         </div>
     </div>
@@ -357,7 +357,7 @@
                     <button id="close-history" class="bg-black text-white font-bold px-4 py-2 rounded-lg border-2 border-black">Close</button>
                 </div>
                 <div class="flex-1">
-                    <iframe src="history.html" class="w-full h-full border-0"></iframe>
+                    <iframe src="/history.html" class="w-full h-full border-0" onerror="this.replaceWith(document.createElement('div'));"></iframe>
                 </div>
             </div>
         </div>
@@ -736,12 +736,14 @@
                     return;
                 }
                 
-                const roundsQuery = window.firestore.collection('rounds')
-                    .where('status', '==', 'active')
-                    .orderBy('createdAt', 'desc')
-                    .limit(1);
-                
-                const snapshot = await roundsQuery.get();
+                // Prefer official query builder to avoid wrapper chain issues
+                const q = window.firebaseFirestore.query(
+                    window.firebaseFirestore.collection(window.firebase.firestore(), 'rounds'),
+                    window.firebaseFirestore.where('status', '==', 'active'),
+                    window.firebaseFirestore.orderBy('createdAt', 'desc'),
+                    window.firebaseFirestore.limit(1)
+                );
+                const snapshot = await window.firebaseFirestore.getDocs(q);
                 
                 if (!snapshot.empty) {
                     const round = snapshot.docs[0];
@@ -796,12 +798,14 @@
                     return;
                 }
                 
-                const ticketsQuery = window.firestore.collection('tickets')
-                    .where('userId', '==', currentUser.uid)
-                    .orderBy('createdAt', 'desc')
-                    .limit(10);
-                
-                const snapshot = await ticketsQuery.get();
+                // Prefer official query builder to avoid wrapper chain issues
+                const tq = window.firebaseFirestore.query(
+                    window.firebaseFirestore.collection(window.firebase.firestore(), 'tickets'),
+                    window.firebaseFirestore.where('userId', '==', currentUser.uid),
+                    window.firebaseFirestore.orderBy('createdAt', 'desc'),
+                    window.firebaseFirestore.limit(10)
+                );
+                const snapshot = await window.firebaseFirestore.getDocs(tq);
                 const tickets = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
@@ -957,15 +961,18 @@
                 // Ensure authed
                 await ensureAuth();
                 
-                // Check if wallet is connected
-                if (!wallet || !wallet.publicKey) {
+                // Resolve wallet address with fallback
+                const address = (wallet && wallet.publicKey && typeof wallet.publicKey.toString === 'function')
+                    ? wallet.publicKey.toString()
+                    : (currentUser && currentUser.walletAddress) || null;
+                if (!address) {
                     throw new Error('Wallet not connected');
                 }
                 
                 // Record ticket
                 await window.firestore.collection('tickets').add({
                     userId: currentUser.uid,
-                    walletAddress: wallet.publicKey.toString(),
+                    walletAddress: address,
                     level: amount,
                     amount: amount,
                     transactionSignature: signature,
