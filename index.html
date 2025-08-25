@@ -6,7 +6,7 @@
     <title>Lottery App - 10 Players Draw</title>
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎰</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
     <script type="module">
         // 导入 Firebase SDK
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
@@ -196,7 +196,7 @@
                 <div class="text-white text-lg">
                     <span class="font-bold">Current OKB Price:</span>
                     <span id="okb-price" class="ml-2 font-bold text-2xl">$1.00</span>
-                </div>
+            </div>
             </div>
         </div>
     </section>
@@ -207,7 +207,7 @@
             <div class="text-center mb-12">
                 <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">Buy <span class="text-memePink">Tickets</span></h2>
                 <p class="text-xl text-gray-600">Choose your ticket level and join the draw!</p>
-            </div>
+                </div>
             
             <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Basic Ticket -->
@@ -220,7 +220,7 @@
                     </div>
                     <button class="buy-ticket-btn w-full bg-memeGreen hover:bg-green-600 text-black font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-all" data-amount="1">
                         Buy for 1U
-                    </button>
+                </button>
                 </div>
                 
                 <!-- Premium Ticket -->
@@ -243,7 +243,7 @@
                         <h3 class="text-2xl font-bold text-memePurple">VIP Ticket</h3>
                         <div class="text-4xl font-bold text-memeYellow mt-2">10U</div>
                         <p class="text-gray-600 mt-2">Maximum chances</p>
-                    </div>
+                </div>
                     <button class="buy-ticket-btn w-full bg-memePurple hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-all" data-amount="10">
                         Buy for 10U
                     </button>
@@ -267,9 +267,9 @@
                                 </div>
                                 <button id="disconnect-wallet" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-lg border-2 border-black">
                                     Disconnect
-                                </button>
-                            </div>
-                        </div>
+                </button>
+            </div>
+        </div>
                         <div id="user-info" class="text-right">
                             <!-- User info will be populated by JS -->
                         </div>
@@ -282,8 +282,8 @@
                     <div id="myTickets" class="space-y-3">
                         <p class="text-gray-500">Connect wallet to view tickets</p>
                     </div>
-                </div>
-
+        </div>
+        
                 <!-- Referral System -->
                 <div class="bg-gradient-to-br from-green-100 to-memeGreen p-6 rounded-2xl border-4 border-black shadow-xl">
                     <h3 class="text-2xl font-bold text-black mb-4">Referral System</h3>
@@ -291,15 +291,15 @@
                         <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
                             <div class="text-2xl font-bold text-memeBlue" id="referral-balance">0</div>
                             <div class="text-sm text-gray-600">Referral Balance (U)</div>
-                        </div>
+                </div>
                         <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
                             <div class="text-2xl font-bold text-memeGreen" id="referral-people">0</div>
                             <div class="text-sm text-gray-600">People Invited</div>
-                        </div>
+            </div>
                         <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
                             <div class="text-2xl font-bold text-memePink" id="referral-earnings">0</div>
                             <div class="text-sm text-gray-600">Total Earnings (U)</div>
-                        </div>
+        </div>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-4">
                         <input type="text" id="referral-link-input" readonly class="flex-1 bg-white px-4 py-3 rounded-lg border-2 border-black font-mono text-sm" placeholder="Your referral link will appear here">
@@ -319,7 +319,7 @@
                 <div class="flex items-center justify-between px-6 py-4 border-b-4 border-black bg-memeYellow">
                     <h3 class="text-xl font-extrabold">Connect Wallet</h3>
                     <button id="close-modal" class="bg-black text-white font-bold px-3 py-1 rounded-lg border-2 border-black">×</button>
-                </div>
+            </div>
                 <div class="p-6 space-y-4">
                     <button id="metamask-connect" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-all">
                         <i class="fa fa-fox mr-2"></i> MetaMask
@@ -330,7 +330,7 @@
                     <button id="injected-connect" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-all">
                         <i class="fa fa-plug mr-2"></i> Injected
                     </button>
-                </div>
+        </div>
             </div>
         </div>
     </div>
@@ -458,7 +458,7 @@
                 <button id="footer-wallet-connect" class="bg-memeYellow hover:bg-yellow-400 text-black font-bold py-3 px-8 rounded-xl border-2 border-black transform hover:scale-105 transition-all">
                     <i class="fa fa-wallet mr-2"></i> Connect Wallet
                 </button>
-            </div>
+                    </div>
             <div class="border-t border-gray-700 pt-8">
                 <p class="text-gray-400">&copy; 2024 Lottery App. All rights reserved.</p>
             </div>
@@ -513,12 +513,12 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
-                const data = await response.json();
-                if (data.okb && data.okb.usd) {
-                    currentOKBPrice = data.okb.usd;
-                    console.log('Current OKB price:', currentOKBPrice, 'USD');
-                    updateOKBPriceDisplay();
-                    return currentOKBPrice;
+        const data = await response.json();
+        if (data.okb && data.okb.usd) {
+            currentOKBPrice = data.okb.usd;
+                                         console.log('Current OKB price:', currentOKBPrice, 'USD');
+                     updateOKBPriceDisplay();
+                                         return currentOKBPrice;
                 } else {
                     throw new Error('Invalid response format');
                 }
@@ -526,7 +526,7 @@
                 if (error.name === 'AbortError') {
                     console.warn('OKB price fetch timed out');
                 } else {
-                    console.error('Failed to fetch OKB price:', error);
+                console.error('Failed to fetch OKB price:', error);
                 }
                 
                 // Retry logic
@@ -736,69 +736,19 @@
                     return;
                 }
                 
-                // Use the custom wrapper with proper error handling
-                try {
-                    const roundsQuery = window.firestore.collection('rounds')
-                        .where('status', '==', 'active')
-                        .orderBy('createdAt', 'desc')
-                        .limit(1);
-                    
-                    const snapshot = await roundsQuery.get();
-                    
-                    if (!snapshot.empty) {
-                        const round = snapshot.docs[0];
-                        currentRound = {
-                            id: round.id,
-                            ...round.data()
-                        };
-                    } else {
-                        // If no active round, create one
-                        currentRound = {
-                            id: null,
-                            status: 'active',
-                            level: 1,
-                            participants: [],
-                            totalAmount: 0,
-                        };
-                    }
-                } catch (queryError) {
-                    console.warn('Query failed, using fallback:', queryError);
-                    // Fallback to basic collection query
-                    const snapshot = await window.firestore.collection('rounds').get();
-                    const activeRounds = snapshot.docs.filter(doc => doc.data().status === 'active');
-                    
-                    if (activeRounds.length > 0) {
-                        const round = activeRounds[0];
-                        currentRound = {
-                            id: round.id,
-                            ...round.data()
-                        };
-                    } else {
-                        currentRound = {
-                            id: null,
-                            status: 'active',
-                            level: 1,
-                            participants: [],
-                            totalAmount: 0,
-                        };
-                    }
-                }
-                
+                // Use Firebase v9 modular query
+                const q = query(
+                    collection(db, 'rounds'),
+                    where('status', '==', 'active'),
+                    orderBy('createdAt', 'desc'),
+                    limit(1)
+                );
+                const snapshot = await getDocs(q);
                 if (!snapshot.empty) {
                     const round = snapshot.docs[0];
-                    currentRound = {
-                        id: round.id,
-                        ...round.data()
-                    };
+                    currentRound = { id: round.id, ...round.data() };
                 } else {
-                    // If no permission to create, keep local placeholder only
-                    currentRound = {
-                        id: null,
-                        status: 'active',
-                        level: 1,
-                        participants: [],
-                        totalAmount: 0,
-                    };
+                    currentRound = { id: null, status: 'active', level: 1, participants: [], totalAmount: 0 };
                 }
                 
                 updateRoundInfo(currentRound);
@@ -837,22 +787,14 @@
                     return;
                 }
                 
-                // Use the custom wrapper with proper error handling
-                let snapshot;
-                try {
-                    const ticketsQuery = window.firestore.collection('tickets')
-                        .where('userId', '==', currentUser.uid)
-                        .orderBy('createdAt', 'desc')
-                        .limit(10);
-                    
-                    snapshot = await ticketsQuery.get();
-                } catch (queryError) {
-                    console.warn('Query failed, using fallback:', queryError);
-                    // Fallback to basic collection query
-                    snapshot = await window.firestore.collection('tickets').get();
-                    // Filter by userId manually
-                    snapshot.docs = snapshot.docs.filter(doc => doc.data().userId === currentUser.uid);
-                }
+                // Use Firebase v9 modular query
+                const tq = query(
+                    collection(db, 'tickets'),
+                    where('userId', '==', currentUser.uid),
+                    orderBy('createdAt', 'desc'),
+                    limit(10)
+                );
+                const snapshot = await getDocs(tq);
                 const tickets = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
@@ -1313,7 +1255,7 @@
                 console.error('Failed to start realtime listeners:', error);
             }
         }
-        
+
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
             // Parse URL referrer param
