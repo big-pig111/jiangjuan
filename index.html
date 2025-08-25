@@ -736,14 +736,53 @@
                     return;
                 }
                 
-                // Prefer official query builder to avoid wrapper chain issues
-                const q = window.firebaseFirestore.query(
-                    window.firebaseFirestore.collection(window.firebase.firestore(), 'rounds'),
-                    window.firebaseFirestore.where('status', '==', 'active'),
-                    window.firebaseFirestore.orderBy('createdAt', 'desc'),
-                    window.firebaseFirestore.limit(1)
-                );
-                const snapshot = await window.firebaseFirestore.getDocs(q);
+                // Use the custom wrapper with proper error handling
+                try {
+                    const roundsQuery = window.firestore.collection('rounds')
+                        .where('status', '==', 'active')
+                        .orderBy('createdAt', 'desc')
+                        .limit(1);
+                    
+                    const snapshot = await roundsQuery.get();
+                    
+                    if (!snapshot.empty) {
+                        const round = snapshot.docs[0];
+                        currentRound = {
+                            id: round.id,
+                            ...round.data()
+                        };
+                    } else {
+                        // If no active round, create one
+                        currentRound = {
+                            id: null,
+                            status: 'active',
+                            level: 1,
+                            participants: [],
+                            totalAmount: 0,
+                        };
+                    }
+                } catch (queryError) {
+                    console.warn('Query failed, using fallback:', queryError);
+                    // Fallback to basic collection query
+                    const snapshot = await window.firestore.collection('rounds').get();
+                    const activeRounds = snapshot.docs.filter(doc => doc.data().status === 'active');
+                    
+                    if (activeRounds.length > 0) {
+                        const round = activeRounds[0];
+                        currentRound = {
+                            id: round.id,
+                            ...round.data()
+                        };
+                    } else {
+                        currentRound = {
+                            id: null,
+                            status: 'active',
+                            level: 1,
+                            participants: [],
+                            totalAmount: 0,
+                        };
+                    }
+                }
                 
                 if (!snapshot.empty) {
                     const round = snapshot.docs[0];
@@ -798,14 +837,22 @@
                     return;
                 }
                 
-                // Prefer official query builder to avoid wrapper chain issues
-                const tq = window.firebaseFirestore.query(
-                    window.firebaseFirestore.collection(window.firebase.firestore(), 'tickets'),
-                    window.firebaseFirestore.where('userId', '==', currentUser.uid),
-                    window.firebaseFirestore.orderBy('createdAt', 'desc'),
-                    window.firebaseFirestore.limit(10)
-                );
-                const snapshot = await window.firebaseFirestore.getDocs(tq);
+                // Use the custom wrapper with proper error handling
+                let snapshot;
+                try {
+                    const ticketsQuery = window.firestore.collection('tickets')
+                        .where('userId', '==', currentUser.uid)
+                        .orderBy('createdAt', 'desc')
+                        .limit(10);
+                    
+                    snapshot = await ticketsQuery.get();
+                } catch (queryError) {
+                    console.warn('Query failed, using fallback:', queryError);
+                    // Fallback to basic collection query
+                    snapshot = await window.firestore.collection('tickets').get();
+                    // Filter by userId manually
+                    snapshot.docs = snapshot.docs.filter(doc => doc.data().userId === currentUser.uid);
+                }
                 const tickets = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
