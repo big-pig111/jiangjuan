@@ -6,7 +6,7 @@
     <title>Lottery App - 10 Players Draw</title>
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎰</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
-            <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
     <script type="module">
         // 导入 Firebase SDK
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
@@ -45,7 +45,7 @@
         window.firebaseFirestore = { collection, addDoc, doc, setDoc, getDoc, query, where, getDocs, orderBy, limit, onSnapshot };
         window.firebaseFunctions = { httpsCallable };
         
-        // 创建简化的Firestore操作函数
+        // 创建正确的Firestore操作包装器
         window.firestore = {
             collection: (name) => ({
                 doc: (id) => ({
@@ -85,17 +85,6 @@
                 }),
                 onSnapshot: (callback) => onSnapshot(collection(db, name), callback)
             })
-        };
-        
-        // 创建安全的Firestore操作包装器
-        window.safeFirestore = {
-            collection: (name) => {
-                if (!window.firestore) {
-                    console.warn('Firestore not ready yet');
-                    return null;
-                }
-                return window.firestore.collection(name);
-            }
         };
         
         // Firebase SDK 初始化完成，通知主脚本
@@ -147,99 +136,204 @@
             }
         }
     </script>
-    <style type="text/tailwindcss">
-        @layer utilities {
-            .text-shadow {
-                text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.2);
-            }
-            .text-shadow-lg {
-                text-shadow: 5px 5px 0px rgba(0, 0, 0, 0.2);
-            }
-            .rotate-random {
-                transform: rotate(var(--rotation, -3deg));
-            }
-            .border-meme {
-                border-width: 4px;
-                border-style: solid;
-                border-color: black;
-            }
-            .clip-path-slant {
-                clip-path: polygon(0 0, 100% 5%, 100% 100%, 0 95%);
-            }
+    <style>
+        .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .border-meme { border-color: #FFDD00; }
+        .rotate-random { transform: rotate(var(--rotation, 0deg)); }
+        .bg-gradient-meme { background: linear-gradient(135deg, #FFDD00 0%, #FF2E93 100%); }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
+        
+        @keyframes shake {
+            10%, 90% { transform: translateX(-1px); }
+            20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
+        }
+        
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
     </style>
 </head>
-<body class="bg-gray-100 font-meme overflow-x-hidden">
-    <!-- Nav -->
+<body class="bg-gray-100 font-meme">
+    <!-- Navigation -->
     <nav class="sticky top-0 z-50 bg-memeYellow border-b-4 border-black shadow-lg">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-2">
-                <div class="text-4xl animate-pulse-fast">🎯</div>
-                <h1 class="text-2xl md:text-3xl font-bold text-shadow">Lottery App <span class="text-memePink">LOTTERY</span></h1>
+                <div class="text-4xl">🎰</div>
+                <h1 class="text-2xl md:text-3xl font-bold text-shadow">Lottery App</h1>
             </div>
-            
-            <div class="hidden md:flex items-center space-x-6">
-                <a href="#" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">Home</a>
-                <a href="#how-it-works" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">How It Works</a>
-                <a href="#leaderboard" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">Leaderboard</a>
-                <button id="open-history" class="text-lg font-bold hover:text-memePink transition-transform hover:scale-110">History</button>
-            </div>
-            
-            <div class="flex items-center space-x-3">
-                                  <!-- OKB price -->
-                <div class="bg-white px-3 py-1 rounded-lg border-2 border-black shadow-md">
-                    <span class="text-sm font-bold text-gray-600">OKB Price: </span>
-                    <span id="okb-price" class="text-sm font-bold text-memeBlue">$0.00</span>
-                </div>
-                <button id="wallet-connect" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-md">
-                    <i class="fa fa-wallet mr-2"></i> Connect Wallet
+            <div class="flex items-center space-x-4">
+                <button id="open-rules" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-black transform hover:scale-105 transition-all">
+                    <i class="fa fa-book mr-2"></i> Rules
                 </button>
-                <div id="wallet-info" class="hidden">
-                    <span id="wallet-address" class="text-sm text-gray-600 mr-2"></span>
-                    <button id="disconnect-wallet" class="text-red-500 hover:text-red-700">
-                        <i class="fa fa-sign-out"></i>
-                    </button>
-                </div>
-                <div id="userInfo" class="hidden">
-                    <!-- User info will be displayed here -->
-                </div>
-                <div id="myTickets" class="hidden">
-                    <!-- My tickets will be displayed here -->
-                </div>
-                <button class="md:hidden text-2xl">
-                    <i class="fa fa-bars"></i>
+                <button id="open-history" class="bg-memeGreen hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-black transform hover:scale-105 transition-all">
+                    <i class="fa fa-history mr-2"></i> History
+                </button>
+                <button id="wallet-connect" class="bg-memePink hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-md">
+                    <i class="fa fa-wallet mr-2"></i> Connect Wallet
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- Hero -->
-    <header class="relative bg-gradient-to-br from-memePurple via-purple-700 to-memeBlue clip-path-slant pt-16 md:pt-24 pb-32 md:pb-40 overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-full opacity-10">
-            <div class="absolute top-10 left-10 text-9xl">🚀</div>
-            <div class="absolute top-40 right-20 text-8xl">💰</div>
-            <div class="absolute bottom-20 left-1/3 text-10xl">🎉</div>
-            <div class="absolute bottom-40 right-1/4 text-7xl">🚨</div>
-        </div>
-        
-        <div class="container mx-auto px-4 relative z-10">
-            <div class="max-w-3xl mx-auto text-center">
-                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white text-shadow-lg animate-float">10 Players Draw <span class="text-memeYellow">Win Big</span>!</h1>
-                <p class="text-xl md:text-2xl text-white mb-8 text-shadow">Auto-draw at 10 participants! 80% winner + 10% buyback + 5% referrals + 4% grand prize + 1% developers!</p>
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <button id="buy-tickets-btn" class="bg-memeYellow hover:bg-yellow-400 text-black font-bold py-3 px-8 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-xl text-lg"><i class="fa fa-ticket mr-2"></i> Buy Tickets</button>
-                    <button id="open-rules" class="bg-white hover:bg-gray-200 text-memePurple font-bold py-3 px-8 rounded-lg border-2 border-black transform hover:scale-105 transition-all shadow-xl text-lg"><i class="fa fa-info-circle mr-2"></i> How It Works</button>
+    <!-- Hero Section -->
+    <section class="pt-20 pb-16 bg-gradient-to-br from-memeYellow via-memePink to-memeBlue">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white text-shadow">
+                🎰 Lottery Game 🎰
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 text-white font-semibold">
+                Join the 10-player draw and win big prizes!
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button id="buy-tickets-btn" class="bg-memeGreen hover:bg-green-600 text-black font-bold py-4 px-8 rounded-xl border-4 border-black transform hover:scale-105 transition-all shadow-xl text-xl">
+                    <i class="fa fa-ticket mr-2"></i> Buy Tickets Now
+                </button>
+                <div class="text-white text-lg">
+                    <span class="font-bold">Current OKB Price:</span>
+                    <span id="okb-price" class="ml-2 font-bold text-2xl">$1.00</span>
                 </div>
             </div>
         </div>
-        
-        <div class="absolute bottom-6 left-0 right-0 flex justify-center pointer-events-none z-20">
-            <div class="bg-white px-6 py-3 rounded-full border-4 border-black shadow-lg flex items-center space-x-2 animate-bounce">
-                <span class="font-bold">Scroll Down</span>
-                <i class="fa fa-chevron-down"></i>
+    </section>
+
+    <!-- Ticket Levels -->
+    <section id="ticket-levels" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">Buy <span class="text-memePink">Tickets</span></h2>
+                <p class="text-xl text-gray-600">Choose your ticket level and join the draw!</p>
+            </div>
+            
+            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Basic Ticket -->
+                <div class="bg-white p-8 rounded-2xl border-4 border-black shadow-xl transform rotate-random hover:scale-105 transition-all">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl mb-4">🎫</div>
+                        <h3 class="text-2xl font-bold text-memeBlue">Basic Ticket</h3>
+                        <div class="text-4xl font-bold text-memeGreen mt-2">1U</div>
+                        <p class="text-gray-600 mt-2">Entry level ticket</p>
+                    </div>
+                    <button class="buy-ticket-btn w-full bg-memeGreen hover:bg-green-600 text-black font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-all" data-amount="1">
+                        Buy for 1U
+                    </button>
+                </div>
+                
+                <!-- Premium Ticket -->
+                <div class="bg-white p-8 rounded-2xl border-4 border-black shadow-xl transform rotate-random hover:scale-105 transition-all" style="--rotation: 1deg">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl mb-4">🎰</div>
+                        <h3 class="text-2xl font-bold text-memePink">Premium Ticket</h3>
+                        <div class="text-4xl font-bold text-memePurple mt-2">5U</div>
+                        <p class="text-gray-600 mt-2">Better chances</p>
+                    </div>
+                    <button class="buy-ticket-btn w-full bg-memePink hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-all" data-amount="5">
+                        Buy for 5U
+                    </button>
+                </div>
+                
+                <!-- VIP Ticket -->
+                <div class="bg-white p-8 rounded-2xl border-4 border-black shadow-xl transform rotate-random hover:scale-105 transition-all" style="--rotation: -1deg">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl mb-4">👑</div>
+                        <h3 class="text-2xl font-bold text-memePurple">VIP Ticket</h3>
+                        <div class="text-4xl font-bold text-memeYellow mt-2">10U</div>
+                        <p class="text-gray-600 mt-2">Maximum chances</p>
+                    </div>
+                    <button class="buy-ticket-btn w-full bg-memePurple hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-all" data-amount="10">
+                        Buy for 10U
+                    </button>
+                </div>
             </div>
         </div>
-    </header>
+    </section>
+
+    <!-- User Info Section -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+                <!-- Wallet Info -->
+                <div id="wallet-info" class="hidden bg-gradient-to-r from-memeYellow to-memePink p-6 rounded-2xl border-4 border-black shadow-xl mb-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                        <div class="mb-4 md:mb-0">
+                            <h3 class="text-2xl font-bold text-black mb-2">Wallet Connected</h3>
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-black text-white px-3 py-1 rounded-lg font-mono text-sm">
+                                    <span id="wallet-address">0x0000...0000</span>
+                                </div>
+                                <button id="disconnect-wallet" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-lg border-2 border-black">
+                                    Disconnect
+                                </button>
+                            </div>
+                        </div>
+                        <div id="user-info" class="text-right">
+                            <!-- User info will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Tickets -->
+                <div class="bg-white p-6 rounded-2xl border-4 border-black shadow-xl mb-8">
+                    <h3 class="text-2xl font-bold text-memeBlack mb-4">My Tickets</h3>
+                    <div id="myTickets" class="space-y-3">
+                        <p class="text-gray-500">Connect wallet to view tickets</p>
+                    </div>
+                </div>
+
+                <!-- Referral System -->
+                <div class="bg-gradient-to-br from-green-100 to-memeGreen p-6 rounded-2xl border-4 border-black shadow-xl">
+                    <h3 class="text-2xl font-bold text-black mb-4">Referral System</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
+                            <div class="text-2xl font-bold text-memeBlue" id="referral-balance">0</div>
+                            <div class="text-sm text-gray-600">Referral Balance (U)</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
+                            <div class="text-2xl font-bold text-memeGreen" id="referral-people">0</div>
+                            <div class="text-sm text-gray-600">People Invited</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border-2 border-black text-center">
+                            <div class="text-2xl font-bold text-memePink" id="referral-earnings">0</div>
+                            <div class="text-sm text-gray-600">Total Earnings (U)</div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <input type="text" id="referral-link-input" readonly class="flex-1 bg-white px-4 py-3 rounded-lg border-2 border-black font-mono text-sm" placeholder="Your referral link will appear here">
+                        <button id="copy-referral-link-btn" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg border-2 border-black">
+                            <i class="fa fa-copy mr-2"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Wallet Modal -->
+    <div id="wallet-modal" class="fixed inset-0 bg-black/50 z-[100] hidden">
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-md rounded-2xl border-4 border-black shadow-2xl overflow-hidden">
+                <div class="flex items-center justify-between px-6 py-4 border-b-4 border-black bg-memeYellow">
+                    <h3 class="text-xl font-extrabold">Connect Wallet</h3>
+                    <button id="close-modal" class="bg-black text-white font-bold px-3 py-1 rounded-lg border-2 border-black">×</button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <button id="metamask-connect" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-all">
+                        <i class="fa fa-fox mr-2"></i> MetaMask
+                    </button>
+                    <button id="walletconnect-connect" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-all">
+                        <i class="fa fa-link mr-2"></i> WalletConnect
+                    </button>
+                    <button id="injected-connect" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-all">
+                        <i class="fa fa-plug mr-2"></i> Injected
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Rules modal -->
     <div id="rules-modal" class="fixed inset-0 bg-black/50 z-[100] hidden">
@@ -340,331 +434,54 @@
                     </div>
                     
                     <div class="bg-gradient-to-br from-blue-100 to-memeBlue p-6 rounded-2xl border-meme shadow-xl transform rotate-random hover:scale-105 transition-all" style="--rotation: 2deg">
-                        <h3 class="text-2xl font-bold mb-4 text-white">Grand Prize Pool</h3>
+                        <h3 class="text-2xl font-bold mb-4 text-black">Grand Prize Pool</h3>
                         <div class="flex items-end gap-2">
-                            <span id="grand-prize" class="text-5xl font-bold text-white">0</span>
-                            <span class="text-2xl font-bold text-blue-100 mb-1">U</span>
+                            <span id="grand-prize" class="text-5xl font-bold text-black">0</span>
+                            <span class="text-2xl font-bold text-gray-700 mb-1">U</span>
                         </div>
-                        <div class="mt-4 text-lg text-white">
-                            <p><i class="fa fa-ticket mr-2"></i> <span id="total-tickets">0</span> Total Tickets</p>
-                            <p><i class="fa fa-calendar mr-2"></i> Next Draw: <span id="next-draw">Sunday</span></p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Participants list -->
-                <div class="mt-8 bg-white rounded-2xl border-4 border-black p-6 shadow-xl">
-                    <h3 class="text-2xl font-bold mb-4 text-center">Current Participants</h3>
-                     <div id="participants-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                        <!-- Participant cards injected by JS -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Tiers -->
-    <section class="py-16 bg-gray-100">
-        <div class="container mx-auto px-4">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">Choose <span class="text-memeGreen">Tier</span></h2>
-                <p class="text-xl text-gray-600">Choose your tier (2U or 10U)</p>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                <!-- Tier cards -->
-                <div class="bg-white rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake">
-                    <div class="text-4xl mb-4">🥈</div>
-                    <h3 class="text-2xl font-bold mb-2">2U</h3>
-                    <p class="text-gray-600 mb-4">0.2 Tickets</p>
-                    <button class="buy-ticket-btn w-full bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="2">
-                        Buy Now
-                    </button>
-                </div>
-                
-                <div class="bg-memeYellow rounded-xl border-meme shadow-lg p-6 text-center transform hover:scale-110 transition-all hover:shadow-2xl cursor-pointer hover:animate-shake relative">
-                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-memePink text-white font-bold px-3 py-1 rounded-full border-2 border-black transform rotate-[-10deg]">
-                        Hot
-                    </div>
-                    <div class="text-4xl mb-4">🏆</div>
-                    <h3 class="text-2xl font-bold mb-2">10U</h3>
-                    <p class="text-gray-800 mb-4">1 Ticket</p>
-                    <button class="buy-ticket-btn w-full bg-black text-white hover:bg-gray-800 font-bold py-2 px-4 rounded-lg border-2 border-black" data-amount="10">
-                        Buy Now
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- How it works -->
-    <section id="how-it-works" class="py-16 bg-white relative overflow-hidden">
-        <div class="absolute -right-20 -top-20 text-9xl opacity-10">🤔</div>
-        <div class="absolute -left-10 bottom-10 text-8xl opacity-10">📝</div>
-        
-        <div class="container mx-auto px-4 relative z-10">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold mb-2 text-memeBlack text-shadow">HOW IT <span class="text-memeBlue">WORKS</span></h2>
-                <p class="text-xl text-gray-600">It's simple, even your grandma could do it (no offense grandma)</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                <div class="bg-gray-50 p-6 rounded-2xl border-meme shadow-lg">
-                    <div class="w-16 h-16 bg-memePink rounded-full flex items-center justify-center text-white text-2xl mb-6 mx-auto border-4 border-black">
-                        1
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 text-center">CONNECT WALLET</h3>
-                    <p class="text-center">Link your Ethereum wallet (MetaMask, WalletConnect, etc.)</p>
-                </div>
-                
-                <div class="bg-gray-50 p-6 rounded-2xl border-meme shadow-lg">
-                    <div class="w-16 h-16 bg-memeBlue rounded-full flex items-center justify-center text-white text-2xl mb-6 mx-auto border-4 border-black">
-                        2
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 text-center">BUY TICKETS</h3>
-                    <p class="text-center">Choose your amount and get tickets. More tickets = better chance (duh)</p>
-                </div>
-                
-                <div class="bg-gray-50 p-6 rounded-2xl border-meme shadow-lg">
-                    <div class="w-16 h-16 bg-memeGreen rounded-full flex items-center justify-center text-white text-2xl mb-6 mx-auto border-4 border-black">
-                        3
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 text-center">WIN (OR NOT)</h3>
-                    <p class="text-center">We draw when there's 10 people. 80% to winner, 10% buyback, 5% referrals!</p>
-                </div>
-            </div>
-            
-            <!-- Distribution -->
-            <div class="mt-16 max-w-3xl mx-auto bg-gray-100 p-8 rounded-2xl border-meme shadow-lg">
-                <h3 class="text-2xl font-bold mb-6 text-center">PRIZE DISTRIBUTION (10U example)</h3>
-                
-                <div class="space-y-4">
-                    <div class="flex items-center">
-                        <div class="w-24 font-bold">80U</div>
-                        <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
-                            <div class="bg-memeGreen h-full rounded-full" style="width: 80%"></div>
-                        </div>
-                        <div class="w-32 ml-4">Winner</div>
-                    </div>
-                    
-                    <div class="flex items-center">
-                        <div class="w-24 font-bold">10U</div>
-                        <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
-                            <div class="bg-memePurple h-full rounded-full" style="width: 10%"></div>
-                        </div>
-                        <div class="w-32 ml-4">Buyback</div>
-                    </div>
-                    
-                    <div class="flex items-center">
-                        <div class="w-24 font-bold">5U</div>
-                        <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
-                            <div class="bg-memeBlue h-full rounded-full" style="width: 5%"></div>
-                        </div>
-                        <div class="w-32 ml-4">Referrals</div>
-                    </div>
-                    
-                    <div class="flex items-center">
-                        <div class="w-24 font-bold">4U</div>
-                        <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
-                            <div class="bg-memeYellow h-full rounded-full" style="width: 4%"></div>
-                        </div>
-                        <div class="w-32 ml-4">Grand Prize</div>
-                    </div>
-                    
-                    <div class="flex items-center">
-                        <div class="w-24 font-bold">1U</div>
-                        <div class="flex-1 bg-gray-200 h-8 rounded-full overflow-hidden border-2 border-black">
-                            <div class="bg-memePink h-full rounded-full" style="width: 1%"></div>
-                        </div>
-                        <div class="w-32 ml-4">Developers</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    
-
-    <!-- Referral program -->
-    <section class="py-16 bg-white">
-        <div class="container mx-auto px-4">
-            <div class="max-w-4xl mx-auto bg-gradient-to-r from-memePink to-purple-600 rounded-3xl p-8 md:p-12 border-meme shadow-2xl relative overflow-hidden">
-                <div class="absolute -right-10 -top-10 text-9xl opacity-20">💸</div>
-                
-                <div class="relative z-10">
-                    <h2 class="text-4xl font-bold mb-6 text-white text-shadow text-center">REFER & <span class="text-memeYellow">EARN</span></h2>
-                    <p class="text-xl text-white mb-8 text-center">Get 0.5U for each person you refer (when they play)</p>
-                    
-                    <div class="bg-white p-6 rounded-xl border-2 border-black mb-6">
-                        <div class="flex flex-col md:flex-row gap-4">
-                            <input id="referral-link-input" type="text" value="" placeholder="Connect wallet to generate invite link" class="flex-1 font-meme p-3 border-2 border-gray-300 rounded-lg" readonly>
-                            <button id="copy-referral-link-btn" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg border-2 border-black transform hover:scale-105 transition-all whitespace-nowrap">
-                                Copy Link
-                            </button>
-                        </div>
-                        <div class="mt-4 flex items-center justify-between">
-                            <div class="text-white">My Referral Balance</div>
-                            <div id="referral-balance" class="text-2xl font-extrabold text-memeYellow">0</div>
-                        </div>
-                         <p class="mt-2 text-white/90 text-sm">Rewards accumulate to your balance. Once you reach <strong>1U</strong>, they are auto-paid or can be withdrawn.</p>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white/90 p-5 rounded-xl border-2 border-black">
-                            <h3 class="text-xl font-bold mb-2">Your Referrals</h3>
-                            <p id="referral-people" class="text-3xl font-bold">0</p>
-                        </div>
-                        
-                        <div class="bg-white/90 p-5 rounded-xl border-2 border-black">
-                            <h3 class="text-xl font-bold mb-2">Earnings (U)</h3>
-                            <p class="text-3xl font-bold"><span id="referral-earnings">0</span> U</p>
+                        <div class="mt-4 text-lg">
+                            <p><i class="fa fa-trophy mr-2"></i> Weekly Draw</p>
+                            <p><i class="fa fa-ticket mr-2"></i> <span id="total-tickets">0</span> Tickets</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-
-    
 
     <!-- Footer -->
     <footer class="bg-memeBlack text-white py-12">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                <div>
-                    <div class="flex items-center space-x-2 mb-4">
-                        <div class="text-3xl">🚀</div>
-                        <h2 class="text-2xl font-bold">MOONSHOT <span class="text-memePink">LOTTERY</span></h2>
-                    </div>
-                    <p class="text-gray-400">The most meme-tastic lottery on X Layer. Win big or go home!</p>
-                </div>
-                
-                <div>
-                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white">Home</a></li>
-                        <li><a href="#how-it-works" class="text-gray-400 hover:text-white">How It Works</a></li>
-                        <li><a href="#prizes" class="text-gray-400 hover:text-white">Prizes</a></li>
-                        <li><a href="#leaderboard" class="text-gray-400 hover:text-white">Leaderboard</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h3 class="text-xl font-bold mb-4">Legal</h3>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white">Terms of Service</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white">Privacy Policy</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white">Disclaimer</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h3 class="text-xl font-bold mb-4">Connect</h3>
-                    <div class="flex space-x-4 mb-4">
-                        <a href="#" class="text-2xl hover:text-memePink transition-colors"><i class="fa fa-twitter"></i></a>
-                        <a href="#" class="text-2xl hover:text-memePink transition-colors"><i class="fa fa-telegram"></i></a>
-                        <a href="#" class="text-2xl hover:text-memePink transition-colors"><i class="fa fa-discord"></i></a>
-                        <a href="#" class="text-2xl hover:text-memePink transition-colors"><i class="fa fa-reddit"></i></a>
-                    </div>
-                    <button id="footer-wallet-connect" class="bg-memeBlue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-white transform hover:scale-105 transition-all"><i class="fa fa-wallet mr-2"></i> Connect Wallet</button>
-                </div>
+        <div class="container mx-auto px-4 text-center">
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold mb-4">Join the Lottery Game</h3>
+                <p class="text-gray-300 mb-6">Connect your wallet and start playing today!</p>
+                <button id="footer-wallet-connect" class="bg-memeYellow hover:bg-yellow-400 text-black font-bold py-3 px-8 rounded-xl border-2 border-black transform hover:scale-105 transition-all">
+                    <i class="fa fa-wallet mr-2"></i> Connect Wallet
+                </button>
             </div>
-            
-            <div class="border-t border-gray-800 pt-8 text-center text-gray-500">
-                <p>© 2023 Moonshot Lottery. This is a meme project for entertainment purposes only. Don't spend money you can't afford to lose!</p>
+            <div class="border-t border-gray-700 pt-8">
+                <p class="text-gray-400">&copy; 2024 Lottery App. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Notification area -->
-    <div id="notification" class="fixed top-4 right-4 z-50 hidden">
-        <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm border-2 border-black">
-            <div class="flex items-center">
-                <div id="notification-icon" class="mr-3"></div>
-                <div>
-                    <p id="notification-message" class="text-sm font-medium"></p>
-                </div>
-            </div>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/50 z-[200] hidden flex items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl border-4 border-black text-center">
+            <div class="animate-spin text-4xl mb-4">🎰</div>
+            <div id="loading-text" class="text-xl font-bold">Processing...</div>
         </div>
     </div>
 
-    <!-- Loading overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg p-6 border-2 border-black">
-            <div class="flex items-center">
-                <div class="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mr-3"></div>
-                <span id="loading-text">Processing...</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Wallet modal (hidden by default) -->
-    <div id="wallet-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-2xl border-4 border-black p-8 max-w-md w-full mx-4 transform transition-all">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold">Connect Wallet</h3>
-                <button id="close-modal" class="text-2xl">&times;</button>
-            </div>
-            
-            <div class="space-y-4">
-                                    <button id="metamask-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
-                        <img src="https://picsum.photos/id/1/40/40" alt="MetaMask Wallet logo" class="w-8 h-8">
-                        MetaMask
-                    </button>
-                
-                <button id="walletconnect-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
-                    <img src="https://picsum.photos/id/2/40/40" alt="WalletConnect logo" class="w-8 h-8">
-                    WalletConnect
-                </button>
-                
-                <button id="injected-connect" class="w-full flex items-center justify-center gap-3 bg-gray-100 hover:bg-gray-200 font-bold py-3 px-4 rounded-lg border-2 border-black">
-                    <img src="https://picsum.photos/id/3/40/40" alt="Injected Wallet logo" class="w-8 h-8">
-                    Injected
-                </button>
-            </div>
+    <!-- Notification -->
+    <div id="notification" class="fixed top-4 right-4 bg-white p-4 rounded-xl border-4 border-black shadow-2xl z-[300] hidden">
+        <div class="flex items-center space-x-3">
+            <div id="notification-icon"></div>
+            <div id="notification-message" class="font-bold"></div>
         </div>
     </div>
 
     <script>
-        // Firebase SDK 初始化完成后的回调
-        function onFirebaseReady() {
-            // Enable anonymous auth to avoid permission issues
-            if (window.firebaseAuth && window.firebase) {
-                window.firebaseAuth.signInAnonymously(window.firebase.auth())
-                    .then(() => {
-                        console.log('Anonymous auth success');
-                    })
-                    .catch((error) => {
-                        console.error('Anonymous auth failed:', error);
-                    });
-            }
-        }
-
-        // Ensure auth before writing
-        async function ensureAuth() {
-            if (!window.firebase || !window.firebaseAuth) {
-                console.warn('Firebase not ready yet');
-                return null;
-            }
-            
-            if (window.firebase.auth().currentUser) return window.firebase.auth().currentUser;
-            return await new Promise(async (resolve) => {
-                const unsubscribe = window.firebaseAuth.onAuthStateChanged(window.firebase.auth(), (user) => {
-                    if (user) {
-                        unsubscribe();
-                        resolve(user);
-                    }
-                });
-                try { 
-                    if (window.firebaseAuth && window.firebase) {
-                        await window.firebaseAuth.signInAnonymously(window.firebase.auth()); 
-                    }
-                } catch (e) {
-                    console.warn('Anonymous auth failed:', e);
-                }
-            });
-        }
-
         // X Layer connection - reliable RPC endpoint
         let provider = null;
         let wallet = null;
@@ -800,222 +617,21 @@
             loadingOverlay.classList.add('hidden');
         }
 
+        // Update wallet UI
         function updateWalletUI() {
-            if (currentUser && currentUser.walletAddress) {
-                const address = currentUser.walletAddress;
-                walletAddress.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
-                connectWalletBtn.classList.add('hidden');
+            if (currentUser) {
                 walletInfo.classList.remove('hidden');
-                buyTicketsBtn.classList.remove('hidden');
-                // Generate referral link
-                if (referralLinkInput) {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('ref', address);
-                    referralLinkInput.value = url.toString();
-                }
+                walletAddress.textContent = `${currentUser.walletAddress.slice(0, 6)}...${currentUser.walletAddress.slice(-4)}`;
+                connectWalletBtn.classList.add('hidden');
             } else {
-                connectWalletBtn.classList.remove('hidden');
                 walletInfo.classList.add('hidden');
-                buyTicketsBtn.classList.add('hidden');
-                if (referralLinkInput) referralLinkInput.value = '';
-            }
-        }
-        
-        function updateRoundInfo(round) {
-            if (round) {
-                const participants = round.participants || [];
-                const participantCount = participants.length;
-                const totalAmount = round.totalAmount || 0;
-                const status = round.status || 'active';
-                const remaining = Math.max(0, 10 - participantCount);
-
-                // Basics
-                const participantCountElement = document.getElementById('participant-count');
-                const remainingCountElement = document.getElementById('remaining-count');
-                const currentPoolElement = document.getElementById('current-pool');
-                const currentParticipantsElement = document.getElementById('current-participants');
-                const poolStatusElement = document.getElementById('pool-status');
-                const progressBarElement = document.getElementById('progress-bar');
-                const progressLabelElement = document.getElementById('progress-label');
-
-                if (participantCountElement) participantCountElement.textContent = participantCount;
-                if (remainingCountElement) remainingCountElement.textContent = remaining;
-                if (currentPoolElement) currentPoolElement.textContent = totalAmount;
-                if (currentParticipantsElement) currentParticipantsElement.textContent = participantCount;
-                if (poolStatusElement) poolStatusElement.textContent = status === 'active' ? 'In progress...' : 'Ended';
-
-                // Progress bar (by count)
-                const progress = Math.min(participantCount * 10, 100);
-                if (progressBarElement) progressBarElement.style.width = `${progress}%`;
-                
-                // Update progress label position
-                if (progressLabelElement && progress > 0) {
-                    progressLabelElement.style.left = `${Math.min(progress, 90)}%`;
-                }
-
-                // Detailed stats
-                const totalAmountElement = document.getElementById('total-amount');
-                const avgAmountElement = document.getElementById('avg-amount');
-                const maxAmountElement = document.getElementById('max-amount');
-                const minAmountElement = document.getElementById('min-amount');
-
-                if (participants.length > 0) {
-                    const amounts = participants.map(p => p.amount || 0);
-                    const avgAmount = totalAmount / participantCount;
-                    const maxAmount = Math.max(...amounts);
-                    const minAmount = Math.min(...amounts);
-
-                    if (totalAmountElement) totalAmountElement.textContent = totalAmount;
-                    if (avgAmountElement) avgAmountElement.textContent = avgAmount.toFixed(1);
-                    if (maxAmountElement) maxAmountElement.textContent = maxAmount;
-                    if (minAmountElement) minAmountElement.textContent = minAmount;
-                } else {
-                    if (totalAmountElement) totalAmountElement.textContent = '0';
-                    if (avgAmountElement) avgAmountElement.textContent = '0';
-                    if (maxAmountElement) maxAmountElement.textContent = '0';
-                    if (minAmountElement) minAmountElement.textContent = '0';
-                }
-
-                // Update participants list
-                updateParticipantsList(participants);
+                connectWalletBtn.classList.remove('hidden');
             }
         }
 
-        // Update participants list
-        function updateParticipantsList(participants) {
-            const participantsList = document.getElementById('participants-list');
-            
-            if (participants.length === 0) {
-                participantsList.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No participants</div>';
-                return;
-            }
-
-            const participantsHTML = participants.map((participant, index) => {
-                const walletAddress = participant.walletAddress || '';
-                const shortAddress = walletAddress ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}` : 'Unknown';
-                const amount = participant.amount || 0;
-                const timestamp = participant.timestamp ? new Date(participant.timestamp.toDate()).toLocaleTimeString() : '';
-                
-                // Icon/color by amount
-                let icon = '👤';
-                let bgColor = 'bg-gray-100';
-                let textColor = 'text-gray-800';
-                
-                if (amount >= 100) {
-                    icon = '🚀';
-                    bgColor = 'bg-red-100';
-                    textColor = 'text-red-800';
-                } else if (amount >= 50) {
-                    icon = '💎';
-                    bgColor = 'bg-purple-100';
-                    textColor = 'text-purple-800';
-                } else if (amount >= 10) {
-                    icon = '🏆';
-                    bgColor = 'bg-yellow-100';
-                    textColor = 'text-yellow-800';
-                } else if (amount >= 5) {
-                    icon = '🥈';
-                    bgColor = 'bg-blue-100';
-                    textColor = 'text-blue-800';
-                } else {
-                    icon = '🥉';
-                    bgColor = 'bg-green-100';
-                    textColor = 'text-green-800';
-                }
-
-                return `
-                    <div class="${bgColor} p-3 rounded-lg border-2 border-black text-center transform hover:scale-105 transition-all">
-                        <div class="text-2xl mb-2">${icon}</div>
-                        <div class="font-bold ${textColor} text-lg">${amount}U</div>
-                        <div class="text-xs text-gray-600 mb-1">${shortAddress}</div>
-                        <div class="text-xs text-gray-500">${timestamp}</div>
-                    </div>
-                `;
-            }).join('');
-
-            participantsList.innerHTML = participantsHTML;
-        }
-
-        // Show draw result modal (reuse history detail style)
-        function showDrawResult(round) {
-            if (!round) return;
-            const winner = round.winner;
-            const participants = Array.isArray(round.participants) ? round.participants : [];
-
-            const winnerBlock = winner ? `
-                <div class="bg-memeYellow p-4 rounded-lg border-2 border-black mb-4">
-                    <h4 class="font-bold text-lg mb-2">🏆 Winner</h4>
-                    <div class="space-y-1 text-sm">
-                        <div><strong>Wallet:</strong> ${winner.walletAddress || '-'}</div>
-                        <div><strong>User ID:</strong> ${winner.userId || '-'}</div>
-                        <div><strong>Amount:</strong> ${winner.amount || 0}U</div>
-                        <div><strong>Time:</strong> ${winner.timestamp ? new Date(winner.timestamp.toDate()).toLocaleString() : 'Unknown'}</div>
-                    </div>
-                </div>
-            ` : '';
-
-            const participantsList = participants.length > 0 ? participants.map((p, idx) => `
-                <div class="flex justify-between items-center py-2 border-b border-gray-200 ${winner && p.walletAddress === winner.walletAddress ? 'bg-memeYellow' : ''}">
-                    <div class="flex items-center space-x-3">
-                        <span class="text-sm font-bold">#${idx + 1}</span>
-                        <div>
-                            <div class="text-sm font-medium">${p.walletAddress || '-'}</div>
-                            <div class="text-xs text-gray-500">${p.timestamp ? new Date(p.timestamp.toDate()).toLocaleString() : 'Unknown'}</div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-sm font-bold">${p.amount || 0}U</div>
-                        ${winner && p.walletAddress === winner.walletAddress ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">🏆 Winner</span>' : ''}
-                    </div>
-                </div>
-            `).join('') : '<p class="text-gray-500">No participants</p>';
-
-            drawResultContent.innerHTML = `
-                <div class="space-y-6">
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-bold text-lg mb-2">Round Info</h4>
-                        <div class="grid grid-cols-2 gap-4 text-sm">
-                            <div><strong>Round ID:</strong> ${round.id}</div>
-                            <div><strong>Status:</strong> Completed</div>
-                            <div><strong>Total:</strong> ${round.totalAmount || 0}U</div>
-                            <div><strong>Prize:</strong> ${round.prizeAmount || 0}U</div>
-                            <div><strong>Buyback:</strong> ${round.buybackAmount || 0}U</div>
-                            <div><strong>Referrals:</strong> ${round.referralAmount || 0}U</div>
-                            <div><strong>Grand Prize:</strong> ${round.grandPrizeAmount || 0}U</div>
-                            <div><strong>Developers:</strong> ${round.developerAmount || 0}U</div>
-                        </div>
-                    </div>
-                    ${winnerBlock}
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-bold text-lg mb-2">Participants (${participants.length})</h4>
-                        <div class="max-h-60 overflow-y-auto">
-                            ${participantsList}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            drawResultModal.classList.remove('hidden');
-        }
-
-        // Listen to current active round changes (show modal on first completed with winner)
-        function attachRoundListener(roundId) {
-            if (!roundId) return;
-            try { if (typeof activeRoundUnsubscribe === 'function') activeRoundUnsubscribe(); } catch (_) {}
-
-            activeRoundUnsubscribe = window.firestore.collection('rounds').doc(roundId).onSnapshot((doc) => {
-                if (!doc.exists) return;
-                const data = doc.data();
-                // Show only the first time the round completes
-                if (data && data.status === 'completed' && data.winner && lastResultShownRoundId !== doc.id) {
-                    lastResultShownRoundId = doc.id;
-                    showDrawResult({ id: doc.id, ...data });
-                }
-            });
-        }
-
+        // Update user info
         function updateUserInfo() {
-            const userInfo = document.getElementById('userInfo');
+            const userInfo = document.getElementById('user-info');
             if (userInfo) {
                 if (currentUser) {
                     userInfo.innerHTML = `
@@ -1328,8 +944,8 @@
                 await loadCurrentRound();
                 
             } catch (error) {
-                console.error('Purchase failed:', error);
-                showNotification('Purchase failed, please retry', 'error');
+                console.error('Failed to buy ticket:', error);
+                showNotification('Failed to buy ticket: ' + error.message, 'error');
             } finally {
                 hideLoading();
             }
@@ -1418,6 +1034,48 @@
                 
             } catch (error) {
                 console.error('Failed to load pool info:', error);
+            }
+        }
+
+        // Update round info display
+        function updateRoundInfo(round) {
+            if (!round) return;
+            
+            const participantCount = round.participants ? round.participants.length : 0;
+            const totalAmount = round.totalAmount || 0;
+            const avgAmount = participantCount > 0 ? (totalAmount / participantCount).toFixed(1) : 0;
+            const maxAmount = round.participants ? Math.max(...round.participants.map(p => p.amount)) : 0;
+            const minAmount = round.participants ? Math.min(...round.participants.map(p => p.amount)) : 0;
+            
+            // Update progress bar
+            const progressBar = document.getElementById('progress-bar');
+            const progressLabel = document.getElementById('progress-label');
+            const participantCountEl = document.getElementById('participant-count');
+            const remainingCountEl = document.getElementById('remaining-count');
+            const totalAmountEl = document.getElementById('total-amount');
+            const avgAmountEl = document.getElementById('avg-amount');
+            const maxAmountEl = document.getElementById('max-amount');
+            const minAmountEl = document.getElementById('min-amount');
+            const currentPoolEl = document.getElementById('current-pool');
+            const currentParticipantsEl = document.getElementById('current-participants');
+            const poolStatusEl = document.getElementById('pool-status');
+            
+            if (progressBar) progressBar.style.width = `${(participantCount / 10) * 100}%`;
+            if (participantCountEl) participantCountEl.textContent = participantCount;
+            if (remainingCountEl) remainingCountEl.textContent = 10 - participantCount;
+            if (totalAmountEl) totalAmountEl.textContent = totalAmount;
+            if (avgAmountEl) avgAmountEl.textContent = avgAmount;
+            if (maxAmountEl) maxAmountEl.textContent = maxAmount;
+            if (minAmountEl) minAmountEl.textContent = minAmount;
+            if (currentPoolEl) currentPoolEl.textContent = totalAmount;
+            if (currentParticipantsEl) currentParticipantsEl.textContent = participantCount;
+            if (poolStatusEl) poolStatusEl.textContent = participantCount >= 10 ? 'Drawing...' : 'Waiting...';
+        }
+
+        // Ensure authentication
+        async function ensureAuth() {
+            if (!currentUser) {
+                throw new Error('User not authenticated');
             }
         }
 
@@ -1561,6 +1219,45 @@
             
             // Mark app as initialized
             window.appInitialized = true;
+        }
+
+        // 启动实时监听器（等待Firebase就绪）
+        function startRealtimeListeners() {
+            if (!window.firestore) {
+                console.warn('Firestore not ready yet, retrying in 1 second...');
+                setTimeout(startRealtimeListeners, 1000);
+                return;
+            }
+            
+            console.log('Starting realtime listeners...');
+            
+            try {
+                // Realtime listen to rounds
+                window.firestore.collection('rounds')
+                    .where('status', '==', 'active')
+                    .onSnapshot((snapshot) => {
+                        if (!snapshot.empty) {
+                            const round = snapshot.docs[0];
+                            currentRound = {
+                                id: round.id,
+                                ...round.data()
+                            };
+                            updateRoundInfo(currentRound);
+                            if (currentRound && currentRound.id) attachRoundListener(currentRound.id);
+                        }
+                    });
+
+                // Realtime listen to pools
+                window.firestore.collection('pools').onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'modified' || change.type === 'added') {
+                            loadPoolInfo();
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to start realtime listeners:', error);
+            }
         }
         
         // Event listeners
@@ -1794,10 +1491,6 @@
                 initializeApp();
             };
         }
-
-
-
-
     </script>
 </body>
 </html>
